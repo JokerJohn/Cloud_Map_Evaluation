@@ -1,5 +1,5 @@
 # Cloud_Map_Evaluation
-Point cloud map evaluation library  for the FusionPortable dataset.  Metrics include RMSE, Accuracy(mean error), Precision(standard deviation), completeness(overlap ratio), chamfer distance(MD) and F1-score at all levels of 1cm/2cm/5cm/10cm/20cm.
+Point cloud map evaluation library  for the [FusionPortable](https://ram-lab.com/file/site/fusionportable/dataset/fusionportable/) dataset.  The Metrics include RMSE, Accuracy(mean error), Precision(standard deviation), Completeness(overlap ratio), Chamfer distance(CD) and F1-score at all levels of 1cm/2cm/5cm/10cm/20cm.
 
 ## Dependencies
 
@@ -73,7 +73,7 @@ we can also get a simpe mesh reconstructed prom pcd cloud map.
 
 ## Publications
 
-We kindly recommond to cite our paper if you find this library useful:
+We kindly recommond to cite [our paper](https://arxiv.org/abs/2208.11865) if you find this library useful:
 
 ```latex
 @article{Jiao2022Aug,
