@@ -1,5 +1,5 @@
-# Cloud_Map_Evaluation
-Point cloud map evaluation library  for the [FusionPortable](https://ram-lab.com/file/site/fusionportable/dataset/fusionportable/) dataset.  The Metrics include RMSE, Accuracy(mean error), Precision(standard deviation), Completeness(overlap ratio), Chamfer distance(CD) and F1-score at all levels of 1cm/2cm/5cm/10cm/20cm.
+# Cloud Map Evaluation
+Point cloud map evaluation library  for the [FusionPortable](https://ram-lab.com/file/site/fusionportable/dataset/fusionportable/) dataset.  The Metrics include RMSE, Accuracy(mean error), Precision(standard deviation), Completeness(overlap ratio), Chamfer distance(CD) and F1-score at all levels of `1/2/5/10/20`.
 
 **Author**: Xiangcheng HU, Jiaojian Hao, Tianshuai HU.
 
@@ -76,12 +76,6 @@ we can also get a simpe mesh reconstructed from pcd cloud map.
 - add python script to plot the results.
 
 ## ![image-20230101200137773](README/image-20230101200137773.png) 
-
-
-
-
-
-
 
 ## Publications
 
