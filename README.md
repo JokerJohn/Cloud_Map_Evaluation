@@ -67,6 +67,10 @@ we can also get a simpe mesh reconstructed from pcd cloud map.
 
 ![image-20230101200651976](README/image-20230101200651976.png)
 
+5. we got the result flies.
+
+![image-20230104184348273](README/image-20230104184348273.png)
+
 ## TO DO
 
 - add python script to plot the results.
