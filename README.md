@@ -9,6 +9,12 @@ Point cloud map evaluation library  for the [FusionPortable](https://ram-lab.com
 
 - Eigen3
 
+## Test Data
+
+| sequence | Test PCD                                                     | GT PCD                                                       |
+| -------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| MCR_slow | [password: 1](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/ES9eSANEr-9NvkFqMzMFsecBo5r3hBpBnj0c6BMPgsfXnQ?e=aijdPf) | [password: 1](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/ESfn5EEsiPlCiJcydVc_HqgBDGqy65MHoyu63XE-iKbFBQ?e=dTDon4) |
+
 ## Usage
 
 1. install open3d
