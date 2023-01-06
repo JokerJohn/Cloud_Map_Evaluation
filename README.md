@@ -1,7 +1,7 @@
 # Cloud Map Evaluation
-Point cloud map evaluation library  for the [FusionPortable](https://ram-lab.com/file/site/fusionportable/dataset/fusionportable/) dataset.  The Metrics include RMSE, Accuracy(mean error), Precision(standard deviation), Completeness(overlap ratio), Chamfer distance(CD) and F1-score at all levels of `1/2/5/10/20`.
+Point cloud map evaluation library  for the [FusionPortable](https://ram-lab.com/file/site/fusionportable/dataset/fusionportable/) dataset.  The Metrics include RMSE, Accuracy(mean error), Precision(standard deviation), Completeness(overlap ratio), Chamfer distance(CD) and F1-score at all levels of `1/2/5/10/20`cm.
 
-**Author**: Xiangcheng HU, Jiaojian Hao, Tianshuai HU.
+**Author**: Xiangcheng HU, [Jiaojian Hao](https://github.com/gogojjh), [Tianshuai HU](https://github.com/hutslib).
 
 ## Dependencies
 
@@ -9,15 +9,15 @@ Point cloud map evaluation library  for the [FusionPortable](https://ram-lab.com
 
 - Eigen3
 
-## Test Data
+## Test Data(password: 1)
 
 | sequence | Test PCD                                                     | GT PCD                                                       |
 | -------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| MCR_slow | [password: 1](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/ES9eSANEr-9NvkFqMzMFsecBo5r3hBpBnj0c6BMPgsfXnQ?e=aijdPf) | [password: 1](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/ESfn5EEsiPlCiJcydVc_HqgBDGqy65MHoyu63XE-iKbFBQ?e=dTDon4) |
+| MCR_slow | [map.pcd](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/ES9eSANEr-9NvkFqMzMFsecBo5r3hBpBnj0c6BMPgsfXnQ?e=aijdPf) | [map_gt.pcd](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/ESfn5EEsiPlCiJcydVc_HqgBDGqy65MHoyu63XE-iKbFBQ?e=dTDon4) |
 
 ## Usage
 
-1. install open3d
+1. install open3d. (maybe a higer version of CMake is needed)
 
 ```bash
 git clone https://github.com/isl-org/Open3D.git
@@ -75,7 +75,19 @@ we can also get a simpe mesh reconstructed from pcd cloud map.
 
 - add python script to plot the results.
 
-## ![image-20230101200137773](README/image-20230101200137773.png) 
+## Issues
+
+### How do you get your initial pose?
+
+we can use [CloudCompare](https://github.com/CloudCompare/CloudCompare) to align LIO map to Gt map .
+
+- Roughly  translate and rotate the LIO point cloud map to the GT map, the terminal output transform `T1`.
+
+- Manually register the moved LIO map (aligned) to the GT map (reference), and get the output of the terminal transfrom `T2`, then the initial pose matrix is `T2 * T1`
+
+![image-20230106135937336](README/image-20230106135937336.png)
+
+![image-20230106140017020](README/image-20230106140017020.png)
 
 ## Publications
 
