@@ -1,4 +1,6 @@
 #include "cloud_map_eval.h"
+#include <filesystem>
+
 
 /**
  * for map evaluation, we have several metrics
@@ -30,6 +32,8 @@ int main(int argc, char **argv) {
   est_path = "../dataset/MCR_slow/";
   gt_path = "../dataset/MCR_slow/MCR_gt.pcd";
   results_path = "../dataset/MCR_slow/";
+
+  std::cout << "Current working directory: " << std::filesystem::current_path() << std::endl;
 
   //  MCR_slow_00
   //  initial_matrix << 0.076328999, -0.997022781, -0.010945004, -3.413845980,
