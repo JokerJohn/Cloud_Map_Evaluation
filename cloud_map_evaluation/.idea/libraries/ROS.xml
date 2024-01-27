@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="ROS">
+    <CLASSES>
+      <root url="file:///opt/ros/noetic" />
+      <root url="file:///opt/ros/noetic" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
