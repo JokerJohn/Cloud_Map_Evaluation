@@ -28,6 +28,28 @@ int CloudMapEva::process() {
     t2 = tic_toc.toc();
     std::cout << "2. estimate normal: " << (t2 - t1) / 1000.0 << " [s]" << std::endl;
 
+    if (eva_mme) {
+        double radius = 0.3;
+        mme_est = ComputeMeanMapEntropy(map_3d_, est_entropies, radius);
+        mme_gt = ComputeMeanMapEntropy(gt_3d_, gt_entropies, radius);
+        std::cout << "MME EST-GT: " << mme_est << " " << mme_gt << std::endl;
+
+        // 合并两个点云的熵值向量
+        std::vector<double> combined_entropies = est_entropies;  // 假设entropies已经包含了map_3d_的熵值
+        combined_entropies.insert(combined_entropies.end(), gt_entropies.begin(), gt_entropies.end());  // 添加gt_3d_的熵值
+        std::vector<double> non_zero_combined;
+        std::copy_if(combined_entropies.begin(), combined_entropies.end(), std::back_inserter(non_zero_combined),
+                     [](double val) { return val != 0.0; });
+        max_abs_entropy = std::fabs(*std::min_element(non_zero_combined.begin(), non_zero_combined.end()));
+        min_abs_entropy = std::fabs(*std::max_element(non_zero_combined.begin(), non_zero_combined.end()));
+        std::cout << "MAX MIN ENTROPY: " << max_abs_entropy << " " << min_abs_entropy << std::endl;
+
+        // 使用共同的颜色映射范围对两个点云进行上色
+        map_3d_entropy = ColorPointCloudByMME(map_3d_, est_entropies, min_abs_entropy, max_abs_entropy);
+        gt_3d_entropy = ColorPointCloudByMME(gt_3d_, gt_entropies, min_abs_entropy, max_abs_entropy);
+        std::cout << "2. calculate MME: " << (tic_toc.toc() - t2) / 1000.0 << " [s]" << std::endl;
+    }
+
     /** if building mesh */
     if (eva_mesh) {
         gt_mesh = createMeshFromPCD(gt_3d_, 0.6, 10);
@@ -171,6 +193,83 @@ std::shared_ptr<PointCloud> CloudMapEva::renderDistanceOnPointCloud(
         target_points_render->colors_[i] = colorbar.GetColor(a);
     }
     return target_points_render;
+}
+
+
+// 新增：根据MME上色
+std::shared_ptr<open3d::geometry::PointCloud> CloudMapEva::ColorPointCloudByMME(
+        const std::shared_ptr<open3d::geometry::PointCloud> &pointcloud,
+        const std::vector<double> &entropies,
+        double mean_entropy) {
+    // 创建一个新的点云用于上色
+    auto colored_pointcloud = std::make_shared<open3d::geometry::PointCloud>();
+    colored_pointcloud->points_ = pointcloud->points_;  // 只复制点的位置信息
+    colored_pointcloud->colors_.resize(colored_pointcloud->points_.size(), Eigen::Vector3d(1, 1, 1));
+    //colored_pointcloud->PaintUniformColor(Eigen::Vector3d(1, 1, 1));
+
+    // 计算熵值的绝对值范围
+    std::vector<double> non_zero_entropies;
+    std::copy_if(entropies.begin(), entropies.end(), std::back_inserter(non_zero_entropies),
+                 [](double entropy) { return entropy != 0.0; });
+    double max_abs_entropy = std::fabs(*std::min_element(non_zero_entropies.begin(), non_zero_entropies.end()));
+    double min_abs_entropy = std::fabs(*std::max_element(non_zero_entropies.begin(), non_zero_entropies.end()));
+
+    std::cout << "MAX MIN ENTROPY: " << max_abs_entropy << " " << min_abs_entropy << std::endl;
+
+    // 创建颜色映射
+    open3d::visualization::ColorMapJet color_map;
+    // 根据熵值对点云进行上色
+    for (size_t i = 0; i < entropies.size(); ++i) {
+        if (valid_entropy_points[i]) {
+            // 将熵值的绝对值归一化到0到1的范围
+            double normalized_entropy =
+                    (std::fabs(entropies[i]) - min_abs_entropy) / (max_abs_entropy - min_abs_entropy);
+            // 从色图中获取颜色
+            Eigen::Vector3d color = color_map.GetColor(normalized_entropy);
+            colored_pointcloud->colors_[i] = color;
+        } else {
+            // colored_pointcloud->colors_[i] = Eigen::Vector3d(1.0, 0., 0.);  // red色表示无效点
+        }
+    }
+    return colored_pointcloud;
+}
+
+std::shared_ptr<open3d::geometry::PointCloud> CloudMapEva::ColorPointCloudByMME(
+        const std::shared_ptr<open3d::geometry::PointCloud> &pointcloud,
+        const std::vector<double> &entropies,
+        double min_abs_entropy, double max_abs_entropy) {
+    // 创建一个新的点云用于上色
+    auto colored_pointcloud = std::make_shared<open3d::geometry::PointCloud>();
+    //colored_pointcloud->points_ = pointcloud->points_;  // 只复制点的位置信息
+    // colored_pointcloud->colors_.resize(colored_pointcloud->points_.size(), Eigen::Vector3d(1, 1, 1));
+    //colored_pointcloud->PaintUniformColor(Eigen::Vector3d(1, 1, 1));
+
+    // 计算熵值的绝对值范围
+    //    std::vector<double> non_zero_entropies;
+    //    std::copy_if(entropies.begin(), entropies.end(), std::back_inserter(non_zero_entropies),
+    //                 [](double entropy) { return entropy != 0.0; });
+    //    double max_abs_entropy = std::fabs(*std::min_element(non_zero_entropies.begin(), non_zero_entropies.end()));
+    //    double min_abs_entropy = std::fabs(*std::max_element(non_zero_entropies.begin(), non_zero_entropies.end()));
+
+    // 创建颜色映射
+    open3d::visualization::ColorMapJet color_map;
+    // 根据熵值对点云进行上色
+    for (size_t i = 0; i < entropies.size(); ++i) {
+        if (valid_entropy_points[i]) {
+            // 将熵值的绝对值归一化到0到1的范围
+            double normalized_entropy =
+                    (std::fabs(entropies[i]) - min_abs_entropy) / (max_abs_entropy - min_abs_entropy);
+            // 从色图中获取颜色
+            Eigen::Vector3d color = color_map.GetColor(normalized_entropy);
+            //colored_pointcloud->colors_[i] = color;
+            // 将有效的点和对应的颜色添加到新的点云
+            colored_pointcloud->points_.push_back(pointcloud->points_[i]);
+            colored_pointcloud->colors_.push_back(color);
+        } else {
+            //            colored_pointcloud->colors_[i] = Eigen::Vector3d(1.0, 0., 0.);  // red色表示无效点
+        }
+    }
+    return colored_pointcloud;
 }
 
 std::shared_ptr<Mesh> CloudMapEva::renderDistanceOnMesh(
@@ -533,6 +632,7 @@ void CloudMapEva::calculateMetrics(pipelines::registration::RegistrationResult &
     }
     std::cout << "Chamfer Distance: " << cd_vec.transpose() << std::endl;
     std::cout << "F1 Score: " << f1_vec.transpose() << std::endl;
+    std::cout << "MME: " << mme_est << " " << mme_gt << std::endl;
 }
 
 void CloudMapEva::saveResults() {
@@ -564,6 +664,10 @@ void CloudMapEva::saveResults() {
                 << std::endl;
     file_result << std::fixed << setprecision(5) << "F1: " << f1_vec.transpose()
                 << std::endl;
+    if (eva_mme) {
+        file_result << std::fixed << setprecision(5) << "MME: " << mme_est << " " << mme_gt << " "
+                    << min_abs_entropy << " " << max_abs_entropy << std::endl;
+    }
     file_result << "Time: " << t1 / 1000.0 << " " << (t2 - t1) / 1000.0 << " "
                 << (t3 - t2) / 1000.0 << " " << (t4 - t3) / 1000.0 << " "
                 << (t5 - t4) / 1000.0 << " " << (t7 - t5) / 1000.0 << std::endl;
@@ -589,6 +693,21 @@ void CloudMapEva::saveResults() {
     std::cout << "Save rendered raw distance error map to "
               << param_.evaluation_map_pcd_path_ + "inlier_rendered_dis_map.pcd"
               << std::endl;
+
+    if (eva_mme) {
+        open3d::io::WritePointCloud(
+                param_.evaluation_map_pcd_path_ + "map_entropy.pcd",
+                *map_3d_entropy);
+        std::cout << "Save rendered entropy map to "
+                  << param_.evaluation_map_pcd_path_ + "map_entropy.pcd"
+                  << std::endl;
+        open3d::io::WritePointCloud(
+                param_.evaluation_map_pcd_path_ + "gt_entropy.pcd",
+                *gt_3d_entropy);
+        std::cout << "Save rendered entropy gt map to "
+                  << param_.evaluation_map_pcd_path_ + "gt_entropy.pcd"
+                  << std::endl;
+    }
 
     // ToDO: can not save mesh file successfully
     if (eva_mesh) {
@@ -644,5 +763,109 @@ pipelines::registration::RegistrationResult CloudMapEva::performICPRegistration(
     return registration_result;
 }
 
+double CloudMapEva::ComputeEntropy(const Eigen::Matrix3d &covariance) {
+    double entropy = 0.5 * std::log(2 * M_PI * M_E * covariance.determinant());
+    return entropy;
+}
 
+double
+CloudMapEva::ComputeMeanMapEntropy(const std::shared_ptr<open3d::geometry::PointCloud> &pointcloud,
+                                   std::vector<double> &entropies, double radius) {
+    mean_entropy = 0.0;
+    valid_points = 0;
+    entropies = std::vector<double>(pointcloud->points_.size(), 0.0);
+    valid_entropy_points.resize(pointcloud->points_.size(), false);
+    StartProcessing(static_cast<int>(pointcloud->points_.size()));
+
+    open3d::geometry::KDTreeFlann kdtree;
+    kdtree.SetGeometry(*pointcloud);
+
+/*    for (size_t i = 0; i < pointcloud->points_.size(); ++i) {
+        std::vector<int> indices;
+        std::vector<double> distances;
+        if (kdtree.SearchRadius(pointcloud->points_[i], radius, indices, distances) > 0) {
+            // Remove the first index since it is the point itself
+            indices.erase(indices.begin());
+            distances.erase(distances.begin());
+            if (indices.size() < 10) {
+                // Not enough points to compute covariance matrix
+                continue;
+            }
+
+            Eigen::MatrixXd points(3, indices.size());
+            for (size_t j = 0; j < indices.size(); ++j) {
+                points.col(j) = pointcloud->points_[indices[j]].cast<double>();
+            }
+            Eigen::Vector3d mean = points.rowwise().mean();
+            Eigen::MatrixXd centered = points.colwise() - mean;
+            Eigen::Matrix3d covariance = (centered * centered.transpose()) / static_cast<double>(indices.size() - 1);
+            double entropy = ComputeEntropy(covariance);
+
+            if (!std::isnan(entropy) && !std::isinf(entropy)) {
+                mean_entropy += entropy;
+                entropies[i] = entropy;
+                valid_entropy_points[i] = true;
+                ++valid_points;
+            }
+        }
+    }*/
+
+
+    // Parallelize this loop with OpenMP
+#pragma omp parallel for reduction(+:mean_entropy, valid_points)
+    for (int i = 0; i < static_cast<int>(pointcloud->points_.size()); ++i) {
+        std::vector<int> indices;
+        std::vector<double> distances;
+        if (kdtree.SearchRadius(pointcloud->points_[i], radius, indices, distances) > 0) {
+            // Remove the first index since it is the point itself
+            indices.erase(indices.begin());
+            distances.erase(distances.begin());
+            if (indices.size() < 10) {
+                // Not enough points to compute covariance matrix
+                continue;
+            }
+            Eigen::MatrixXd points(3, indices.size());
+            for (size_t j = 0; j < indices.size(); ++j) {
+                points.col(j) = pointcloud->points_[indices[j]].cast<double>();
+            }
+            Eigen::Vector3d mean = points.rowwise().mean();
+            Eigen::MatrixXd centered = points.colwise() - mean;
+            Eigen::Matrix3d covariance = (centered * centered.transpose()) / static_cast<double>(indices.size() - 1);
+            double entropy = ComputeEntropy(covariance);
+            //std::cout << "covariance determinant : " << covariance.determinant() << std::endl;
+            //            std::cout << "entropy: " << entropy << std::endl;
+            if (!std::isnan(entropy) && !std::isinf(entropy)) {
+                mean_entropy += entropy;
+                entropies[i] = entropy;
+                valid_entropy_points[i] = true;
+                ++valid_points;
+            }
+        }
+        int current_processed = ++processed_points;
+        if (current_processed % 500000 == 0) {
+            using namespace std::chrono;
+            auto now = steady_clock::now();
+            auto elapsed = duration_cast<duration<double>>(now - start_time).count();
+            double average_time_per_point = elapsed / current_processed;
+            int points_remaining = total_points - current_processed;
+            double estimated_time_remaining = average_time_per_point * points_remaining;
+#pragma omp critical
+            {
+                std::cout << "Processed " << current_processed * 100.0 / total_points << "%. ";
+                std::cout << "Estimated time remaining: " << estimated_time_remaining << " seconds." << std::endl;
+            }
+        }
+    }
+    if (valid_points > 0) {
+        mean_entropy /= valid_points;
+    }
+    std::cout << "MME Valid_points " << valid_points * 100.0 / total_points << "% " << valid_points << " "
+              << total_points << std::endl;
+    return mean_entropy;
+}
+
+void CloudMapEva::StartProcessing(int total) {
+    start_time = std::chrono::steady_clock::now();
+    total_points = total;
+}
 

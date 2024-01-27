@@ -92,12 +92,14 @@ struct Param {
 class CloudMapEva {
 public:
     CloudMapEva(Param &param)
-            : param_(param), map_3d_(new PointCloud), gt_3d_(new PointCloud) {
+            : param_(param), map_3d_(new PointCloud), gt_3d_(new PointCloud), processed_points(9) {
         param_.printParam();
 
         t1 = t2 = t3 = t4 = t5 = t6 = t7 = 0.0;
         map_3d_render_inlier.reset(new PointCloud());
         map_3d_render_raw.reset(new PointCloud());
+        map_3d_entropy.reset(new PointCloud());
+        gt_3d_entropy.reset(new PointCloud());
         corresponding_cloud_est.reset(new PointCloud());
         corresponding_cloud_gt.reset(new PointCloud());
 
@@ -123,6 +125,16 @@ public:
     std::shared_ptr<PointCloud> renderDistanceOnPointCloud(
             std::shared_ptr<PointCloud> &reference_points,
             std::shared_ptr<PointCloud> &target_points, const double &dis);
+
+    std::shared_ptr<open3d::geometry::PointCloud> ColorPointCloudByMME(
+            const std::shared_ptr<open3d::geometry::PointCloud> &pointcloud,
+            const std::vector<double> &entropies,
+            double mean_entropy);
+
+    std::shared_ptr<open3d::geometry::PointCloud> ColorPointCloudByMME(
+            const std::shared_ptr<open3d::geometry::PointCloud> &pointcloud,
+            const std::vector<double> &entropies,
+            double min_abs_entropy, double max_abs_entropy);
 
     std::shared_ptr<Mesh> renderDistanceOnMesh(
             std::shared_ptr<PointCloud> &reference_points,
@@ -157,6 +169,13 @@ public:
 
     pipelines::registration::RegistrationResult performICPRegistration();
 
+    double ComputeEntropy(const Eigen::Matrix3d &covariance);
+
+    double ComputeMeanMapEntropy(const std::shared_ptr<open3d::geometry::PointCloud> &pointcloud,
+                                 std::vector<double> &entropies, double radius);
+
+    void StartProcessing(int total);  // 开始处理的函数声明
+
 public:
     Param param_;
 
@@ -164,6 +183,7 @@ private:
     shared_ptr<PointCloud> map_3d_, gt_3d_;
     double t1, t2, t3, t4, t5, t6, t7;
     shared_ptr<PointCloud> map_3d_render_inlier, map_3d_render_raw;
+    shared_ptr<PointCloud> map_3d_entropy, gt_3d_entropy;
     shared_ptr<PointCloud> corresponding_cloud_est, corresponding_cloud_gt;
     std::vector<Vector5d> est_gt_results, gt_est_results;
     Vector5d f1_vec = Vector5d::Zero();
@@ -171,8 +191,19 @@ private:
     Eigen::Matrix4d trans = Eigen::Matrix4d::Identity();
 
     bool eva_mesh = false;
+    bool eva_mme = true;
     shared_ptr<Mesh> gt_mesh, est_mesh;
     shared_ptr<Mesh> gt_mesh_filtered, est_mesh_filtered;
+
+    std::vector<double> est_entropies, gt_entropies;
+    std::vector<bool> valid_entropy_points;
+    double mme_est = 0.0, mme_gt = 0.0;
+    double max_abs_entropy  = 0.0, min_abs_entropy = 0.0;
+    double mean_entropy = 0.0;
+    int valid_points = 0;
+    std::atomic<int> processed_points;
+    std::chrono::steady_clock::time_point start_time;
+    int total_points = 0;
 };
 
 #endif// SRC_POSE_SLAM_PRIOR_SRC_BENCHMARK_CLOUD_MAP_EVAL_H_

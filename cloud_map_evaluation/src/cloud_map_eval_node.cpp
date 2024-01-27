@@ -40,11 +40,9 @@ int main(int argc, char **argv) {
     gt_path = est_folder + sequence_name + "/" + sequence_name + "_gt.pcd";
     results_path = est_folder + sequence_name + "/";
 
-    // params
     Param my_param(est_path, gt_path, results_path, initial_matrix, sequence_name,
                    method, icp_max_distance, accuracy_level,
                    save_immediate_result);
-
     CloudMapEva my_evaluation(my_param);
     my_evaluation.process();
 
