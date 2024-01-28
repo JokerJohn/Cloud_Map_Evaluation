@@ -65,13 +65,13 @@ We can also get a rendered raw distance-error map(10cm) and inlier distance-erro
 
 ![image (4)](./README/image%20(4).png)
 
-if we do not have gt map, we can evaluate the **Mean Map Entropy (MME)**
+if we do not have gt map, we can evaluate the **Mean Map Entropy (MME)**. **LEFT: -3.78477, RIGHT: -4.66876**.
 
 ![image-20240127213301387](./README/image-20240127213301387.png)
 
 
 
-we can also get a simpe mesh reconstructed from pcd cloud map.
+we can also get a simpe mesh reconstructed from point cloud map.
 
 ![image-20230101200651976](README/image-20230101200651976.png)
 
@@ -99,7 +99,7 @@ we can use [CloudCompare](https://github.com/CloudCompare/CloudCompare) to align
 
 ### What's the difference between raw rendered map and inlier rendered map?
 
-The primary function of the "**raw rendered map **(left)" is to color-code the error of all points in the map estimated by the algorithm. For each point in the estimated map that does not find a corresponding point in the **ground truth (gt) map**, it is defaulted to the maximum error (**20cm**), represented as red. On the other hand, the "**inlier rendered map** (right)" excludes the non-overlapping regions of the point cloud and colors only the error of the inlier points after point cloud matching. This map therefore contains only a portion of the points from the original estimated map.
+The primary function of the r**aw rendered map** (left) is to color-code the error of all points in the map estimated by the algorithm. For each point in the estimated map that does not find a corresponding point in the **ground truth (gt) map**, it is defaulted to the maximum error (**20cm**), represented as red. On the other hand, the i**nlier rendered map** (right) excludes the non-overlapping regions of the point cloud and colors only the error of the inlier points after point cloud matching. This map therefore contains only a portion of the points from the original estimated map.
 
 ![image-20240127131202244](./README/image-20240127131202244.png)
 

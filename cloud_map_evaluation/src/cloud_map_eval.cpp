@@ -11,8 +11,8 @@ int CloudMapEva::process() {
         return -1;
     }
     // Downsampling for efficiency
-    map_3d_ = map_3d_->VoxelDownSample(0.01);
-    gt_3d_ = gt_3d_->VoxelDownSample(0.01);
+    map_3d_ = map_3d_->VoxelDownSample(0.1);
+    gt_3d_ = gt_3d_->VoxelDownSample(0.1);
     t1 = tic_toc.toc();
     std::cout << "1. load point size: " << map_3d_->points_.size() << ", "
               << gt_3d_->points_.size() << ", " << t1 / 1000.0 << " [s]"
@@ -29,7 +29,7 @@ int CloudMapEva::process() {
     std::cout << "2. estimate normal: " << (t2 - t1) / 1000.0 << " [s]" << std::endl;
 
     if (eva_mme) {
-        double radius = 0.3;
+        double radius = 0.5;
         mme_est = ComputeMeanMapEntropy(map_3d_, est_entropies, radius);
         mme_gt = ComputeMeanMapEntropy(gt_3d_, gt_entropies, radius);
         std::cout << "MME EST-GT: " << mme_est << " " << mme_gt << std::endl;
