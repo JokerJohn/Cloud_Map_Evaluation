@@ -65,11 +65,9 @@ We can also get a rendered raw distance-error map(10cm) and inlier distance-erro
 
 ![image (4)](./README/image%20(4).png)
 
-if we do not have gt map, we can evaluate the **Mean Map Entropy (MME)**. **LEFT: -3.78477, RIGHT: -4.66876**.
+if we do not have gt map, we can evaluate the **Mean Map Entropy (MME)**, smaller means better consistency.
 
-![image-20240127213301387](./README/image-20240127213301387.png)
-
-
+![image-20240208173755870](./README/image-20240208173755870.png)
 
 we can also get a simpe mesh reconstructed from point cloud map.
 
@@ -79,9 +77,28 @@ we can also get a simpe mesh reconstructed from point cloud map.
 
 ![image-20240127213557574](./README/image-20240127213557574.png)
 
-## TO DO
+## Important Parameters
 
-- add python script to plot the results.
+```c++
+bool eva_mesh = false;  // if we construct a simple meth.
+bool eva_mme = true; // if we evaluate mme without gt map.
+
+// Downsampling for efficiency
+map_3d_ = map_3d_->VoxelDownSample(0.03);
+gt_3d_ = gt_3d_->VoxelDownSample(0.03);
+
+double radius = 0.5;  // we choose a nearest distance of 0.5m to caculate the point cov for mme caculation.
+mme_est = ComputeMeanMapEntropy(map_3d_, est_entropies, radius);
+mme_gt = ComputeMeanMapEntropy(gt_3d_, gt_entropies, radius);
+
+
+// rendering distance map
+// when render the inlier distance map and raw distance map, we choose a thresohold of trunc_dist_[0] (20cm).
+map_3d_render_inlier = renderDistanceOnPointCloud(corresponding_cloud_gt, corresponding_cloud_est, param_.trunc_dist_[0]);
+map_3d_render_raw = enderDistanceOnPointCloud(gt_3d_, map_3d_, param_.trunc_dist_[0]);
+```
+
+
 
 ## Issues
 
@@ -102,6 +119,8 @@ we can use [CloudCompare](https://github.com/CloudCompare/CloudCompare) to align
 The primary function of the r**aw rendered map** (left) is to color-code the error of all points in the map estimated by the algorithm. For each point in the estimated map that does not find a corresponding point in the **ground truth (gt) map**, it is defaulted to the maximum error (**20cm**), represented as red. On the other hand, the i**nlier rendered map** (right) excludes the non-overlapping regions of the point cloud and colors only the error of the inlier points after point cloud matching. This map therefore contains only a portion of the points from the original estimated map.
 
 ![image-20240127131202244](./README/image-20240127131202244.png)
+
+
 
 ## Publications
 

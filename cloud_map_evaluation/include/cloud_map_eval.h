@@ -136,6 +136,11 @@ public:
             const std::vector<double> &entropies,
             double min_abs_entropy, double max_abs_entropy);
 
+    std::shared_ptr<open3d::geometry::PointCloud> ColorPointCloudByMME(
+            const std::shared_ptr<open3d::geometry::PointCloud> &pointcloud,
+            const std::vector<double> &entropies);
+
+
     std::shared_ptr<Mesh> renderDistanceOnMesh(
             std::shared_ptr<PointCloud> &reference_points,
             std::shared_ptr<Mesh> &target_mesh,
