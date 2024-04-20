@@ -1,7 +1,7 @@
 # Cloud Map Evaluation
 Point cloud map evaluation library  for the [FusionPortable](https://ram-lab.com/file/site/fusionportable/dataset/fusionportable/) dataset.  The Metrics include RMSE, Accuracy(mean error), Precision(standard deviation), Completeness(overlap ratio), Chamfer distance(CD) and F1-score at all levels of `1/2/5/10/20`cm.  For those do not have ground truth maps, we use Mean Map Entropy (MME).
 
-**Author**: Xiangcheng HU, [Jiaojian Hao](https://github.com/gogojjh), [Tianshuai HU](https://github.com/hutslib).
+**Author**: Xiangcheng HU, [Jiaojian Hao](https://github.com/gogojjh).
 
 ## Dependencies
 
@@ -53,6 +53,10 @@ sequence_name = "MCR_slow";
 est_path = est_folder + sequence_name + "/";
 gt_path = est_folder + sequence_name + "/" + sequence_name + "_gt.pcd";
 results_path = est_folder + sequence_name + "/";
+
+// in  you want to evaluate mme
+bool evaluate_mme = true;
+bool evaluate_gt_mme = true;  // for gt map, we do not use it
 ```
 
 4. get the final results
@@ -67,7 +71,7 @@ We can also get a rendered raw distance-error map(10cm) and inlier distance-erro
 
 if we do not have gt map, we can evaluate the **Mean Map Entropy (MME)**, smaller means better consistency.
 
-![image-20240208173755870](./README/image-20240208173755870.png)
+![image (5)](./README/image%20(5).png)
 
 we can also get a simpe mesh reconstructed from point cloud map.
 
@@ -118,13 +122,11 @@ we can use [CloudCompare](https://github.com/CloudCompare/CloudCompare) to align
 
 The primary function of the r**aw rendered map** (left) is to color-code the error of all points in the map estimated by the algorithm. For each point in the estimated map that does not find a corresponding point in the **ground truth (gt) map**, it is defaulted to the maximum error (**20cm**), represented as red. On the other hand, the i**nlier rendered map** (right) excludes the non-overlapping regions of the point cloud and colors only the error of the inlier points after point cloud matching. This map therefore contains only a portion of the points from the original estimated map.
 
-![image-20240127131202244](./README/image-20240127131202244.png)
-
-
+![image (6)](./README/image%20(6).png)
 
 ## Publications
 
-We kindly recommond to cite [our paper](https://arxiv.org/abs/2208.11865) if you find this library useful:
+We kindly recommend to cite [our paper](https://arxiv.org/abs/2208.11865) if you find this library useful:
 
 ```latex
 @inproceedings{jiao2022fusionportable,
@@ -135,4 +137,16 @@ We kindly recommond to cite [our paper](https://arxiv.org/abs/2208.11865) if you
   year         = {2022},
   organization = {IEEE}
 }
+
+@ARTICLE{hu2024paloc,
+  author={Hu, Xiangcheng and Zheng, Linwei and Wu, Jin and Geng, Ruoyu and Yu, Yang and Wei, Hexiang and Tang, Xiaoyu and Wang, Lujia and Jiao, Jianhao and Liu, Ming},
+  journal={IEEE/ASME Transactions on Mechatronics}, 
+  title={PALoc: Advancing SLAM Benchmarking With Prior-Assisted 6-DoF Trajectory Generation and Uncertainty Estimation}, 
+  year={2024},
+  volume={},
+  number={},
+  pages={1-12},
+  doi={10.1109/TMECH.2024.3362902}
+  }
+
 ```

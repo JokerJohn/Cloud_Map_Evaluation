@@ -11,28 +11,18 @@ int CloudMapEva::process() {
         return -1;
     }
     // Downsampling for efficiency
-    map_3d_ = map_3d_->VoxelDownSample(0.05);
-    gt_3d_ = gt_3d_->VoxelDownSample(0.05);
+    map_3d_ = map_3d_->VoxelDownSample(0.01);
+    gt_3d_ = gt_3d_->VoxelDownSample(0.01);
     t1 = tic_toc.toc();
     std::cout << "1. load point size: " << map_3d_->points_.size() << ", "
               << gt_3d_->points_.size() << ", " << t1 / 1000.0 << " [s]"
               << std::endl;
-
-    // Estimate normals if not present
-    if (!map_3d_->HasNormals()) {
-        map_3d_->EstimateNormals(geometry::KDTreeSearchParamHybrid(1.0, 10));
-    }
-    if (!gt_3d_->HasNormals()) {
-        gt_3d_->EstimateNormals(geometry::KDTreeSearchParamHybrid(1.0, 10));
-    }
     t2 = tic_toc.toc();
     std::cout << "2. estimate normal: " << (t2 - t1) / 1000.0 << " [s]" << std::endl;
 
-    if (eva_mme) {
-        double radius = 0.5;
+    if (param_.evaluate_mme_) {
+        double radius = 0.2;
         mme_est = ComputeMeanMapEntropy(map_3d_, est_entropies, radius);
-        mme_gt = ComputeMeanMapEntropy(gt_3d_, gt_entropies, radius);
-        std::cout << "MME EST-GT: " << mme_est << " " << mme_gt << std::endl;
 
         // 合并两个点云的熵值向量
         //        std::vector<double> combined_entropies = est_entropies;  // 假设entropies已经包含了map_3d_的熵值
@@ -43,15 +33,18 @@ int CloudMapEva::process() {
         //        max_abs_entropy = std::fabs(*std::min_element(non_zero_combined.begin(), non_zero_combined.end()));
         //        min_abs_entropy = std::fabs(*std::max_element(non_zero_combined.begin(), non_zero_combined.end()));
         //        std::cout << "MAX MIN ENTROPY: " << max_abs_entropy << " " << min_abs_entropy << std::endl;
-
-                // 使用共同的颜色映射范围对两个点云进行上色
-        //        map_3d_entropy = ColorPointCloudByMME(map_3d_, est_entropies, min_abs_entropy, max_abs_entropy);
-        //        gt_3d_entropy = ColorPointCloudByMME(gt_3d_, gt_entropies, min_abs_entropy, max_abs_entropy);
-
-        /** since we finally scale the range of entropy, no need to use the common max and min value*/
+        if (param_.evaluate_gt_mme_) {
+            mme_gt = ComputeMeanMapEntropy(gt_3d_, gt_entropies, radius);
+            std::cout << "MME EST-GT: " << mme_est << " " << mme_gt << std::endl;
+        } else {
+            std::cout << "MME EST: " << mme_est << std::endl;
+        }
         map_3d_entropy = ColorPointCloudByMME(map_3d_, est_entropies);
-        gt_3d_entropy = ColorPointCloudByMME(gt_3d_, gt_entropies);
-        std::cout << "2. calculate MME: " << (tic_toc.toc() - t2) / 1000.0 << " [s]" << std::endl;
+        if (param_.evaluate_gt_mme_) {
+            /** since we finally scale the range of entropy, no need to use the common max and min value*/
+            gt_3d_entropy = ColorPointCloudByMME(gt_3d_, gt_entropies);
+        }
+        std::cout << "2. Calculate MME: " << (tic_toc.toc() - t2) / 1000.0 << " [s]" << std::endl;
     }
 
     /** if building mesh */
@@ -86,7 +79,6 @@ int CloudMapEva::process() {
     t7 = tic_toc.toc();
     std::cout << "6. caculate est-gt and gt-est metrics : " << (t7 - t5) / 1000.0 << " [s]"
               << std::endl;
-
     // Optional: Mesh processing and saving
     if (param_.save_immediate_result_) {
         saveResults(); // Implement this function to save results and perform mesh processing
@@ -280,11 +272,12 @@ std::shared_ptr<open3d::geometry::PointCloud> CloudMapEva::ColorPointCloudByMME(
 std::shared_ptr<open3d::geometry::PointCloud> CloudMapEva::ColorPointCloudByMME(
         const std::shared_ptr<open3d::geometry::PointCloud> &pointcloud,
         const std::vector<double> &entropies) {
+
     // 创建一个新的点云用于上色
     auto colored_pointcloud = std::make_shared<open3d::geometry::PointCloud>();
-    //colored_pointcloud->points_ = pointcloud->points_;  // 只复制点的位置信息
-    // colored_pointcloud->colors_.resize(colored_pointcloud->points_.size(), Eigen::Vector3d(1, 1, 1));
-    //colored_pointcloud->PaintUniformColor(Eigen::Vector3d(1, 1, 1));
+//    colored_pointcloud->points_ = pointcloud->points_;  // 只复制点的位置信息
+//    colored_pointcloud->colors_.resize(colored_pointcloud->points_.size(), Eigen::Vector3d(1, 1, 1));
+//    colored_pointcloud->PaintUniformColor(Eigen::Vector3d(1, 1, 1));
 
     // 计算熵值的绝对值范围
     std::vector<double> non_zero_entropies;
@@ -299,6 +292,11 @@ std::shared_ptr<open3d::geometry::PointCloud> CloudMapEva::ColorPointCloudByMME(
     for (size_t i = 0; i < entropies.size(); ++i) {
         if (valid_entropy_points[i]) {
             // 将熵值的绝对值归一化到0到1的范围
+            // i want to normalize the  entropy value to 0-255,and represent the entropy value by jet color (Red->green->blue), blue stands for low entropy,
+            //  red stands for high entropy which means lower map accuracy.
+            // since entropy value is negative, i need to normalize the absolute value of entropy to 0-1, and then map it to 0-255
+            // also entropy value may range from a small scale, for example, -5.5 to -6.5 , so i need to normalize the absolute value of entropy to 0-1
+            // and then map it to 0-255
             double normalized_entropy =
                     (std::fabs(entropies[i]) - min_abs_entropy) / (max_abs_entropy - min_abs_entropy);
             //normalized_entropy = std::sqrt(normalized_entropy);
@@ -308,17 +306,18 @@ std::shared_ptr<open3d::geometry::PointCloud> CloudMapEva::ColorPointCloudByMME(
             // 将映射后的熵值再次归一化以适配颜色映射
             normalized_entropy = (mapped_entropy - log(epsilon)) / (log(1.0 + epsilon) - log(epsilon));
 
-
+            // 从色图中获取颜色
             // 从色图中获取颜色
             Eigen::Vector3d color = color_map.GetColor(normalized_entropy);
-            //colored_pointcloud->colors_[i] = color;
+
             // 将有效的点和对应的颜色添加到新的点云
             colored_pointcloud->points_.push_back(pointcloud->points_[i]);
             colored_pointcloud->colors_.push_back(color);
         } else {
-            //            colored_pointcloud->colors_[i] = Eigen::Vector3d(1.0, 0., 0.);  // red色表示无效点
+//            colored_pointcloud->colors_[i] = Eigen::Vector3d(1.0, 0., 0.);  // red色表示无效点
         }
     }
+
     return colored_pointcloud;
 }
 
@@ -477,7 +476,6 @@ void CloudMapEva::getDiffRegResult(
         sigma /= points_set.size();
         sigma_vec[i] = sqrt(sigma);
     }
-
     result.push_back(mean_vec);
     result.push_back(rmse_vec);
     result.push_back(fitness_vec);
@@ -729,9 +727,7 @@ void CloudMapEva::saveResults() {
             corresponding_cloud_gt, corresponding_cloud_est, param_.trunc_dist_[0]);
     map_3d_render_raw =
             renderDistanceOnPointCloud(gt_3d_, map_3d_, param_.trunc_dist_[0]);
-    // visualization::DrawGeometries({map_3d_render_raw}, "mesh result");
     //    visualization::DrawGeometries({map_3d_render_inlier}, "mesh result");
-
 
     open3d::io::WritePointCloud(
             param_.evaluation_map_pcd_path_ + "raw_rendered_dis_map.pcd",
@@ -746,21 +742,25 @@ void CloudMapEva::saveResults() {
               << param_.evaluation_map_pcd_path_ + "inlier_rendered_dis_map.pcd"
               << std::endl;
 
-    if (eva_mme) {
+    if (param_.evaluate_mme_) {
         open3d::io::WritePointCloud(
                 param_.evaluation_map_pcd_path_ + "map_entropy.pcd",
                 *map_3d_entropy);
         std::cout << "Save rendered entropy map to "
                   << param_.evaluation_map_pcd_path_ + "map_entropy.pcd"
                   << std::endl;
-        open3d::io::WritePointCloud(
-                param_.evaluation_map_pcd_path_ + "gt_entropy.pcd",
-                *gt_3d_entropy);
-        std::cout << "Save rendered entropy gt map to "
-                  << param_.evaluation_map_pcd_path_ + "gt_entropy.pcd"
-                  << std::endl;
+        if (param_.evaluate_gt_mme_) {
+            open3d::io::WritePointCloud(
+                    param_.evaluation_map_pcd_path_ + "gt_entropy.pcd",
+                    *gt_3d_entropy);
+            std::cout << "Save rendered entropy gt map to "
+                      << param_.evaluation_map_pcd_path_ + "gt_entropy.pcd"
+                      << std::endl;
+            visualization::DrawGeometries({gt_3d_entropy}, "entropy result");
+        }
+        visualization::DrawGeometries({map_3d_entropy}, "entropy result");
     }
-    std::cout << "Results saved to " << result_file_path << std::endl;
+    //std::cout << "Results saved to " << result_file_path << std::endl;
 
     // ToDO: can not save mesh file successfully
     if (eva_mesh) {
@@ -783,6 +783,7 @@ void CloudMapEva::saveResults() {
         open3d::io::WriteTriangleMesh(
                 param_.result_path_ + "correspondence_mesh.ply", *correspdence_mesh);
     }
+    visualization::DrawGeometries({map_3d_render_raw}, "mesh result");
 }
 
 pipelines::registration::RegistrationResult CloudMapEva::performICPRegistration() {
@@ -871,7 +872,7 @@ CloudMapEva::ComputeMeanMapEntropy(const std::shared_ptr<open3d::geometry::Point
             // Remove the first index since it is the point itself
             indices.erase(indices.begin());
             distances.erase(distances.begin());
-            if (indices.size() < 10) {
+            if (indices.size() < 15) {
                 // Not enough points to compute covariance matrix
                 continue;
             }

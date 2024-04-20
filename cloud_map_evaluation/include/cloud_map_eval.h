@@ -48,6 +48,8 @@ struct Param {
     // double colorbar_max_unit_ = 2;
 
     bool save_immediate_result_ = false;
+    bool evaluate_mme_ = true;
+    bool evaluate_gt_mme_ = true;
     Vector5d trunc_dist_;
     // double outlier_dist_;
     Eigen::Matrix4d initial_matrix_ = Eigen::Matrix4d::Identity();
@@ -57,18 +59,18 @@ struct Param {
     Param(std::string evaluation_map_pcd_path, std::string map_gt_path,
           std::string result_path, Eigen::Matrix4d initial_matrix,
           std::string name, int method, double icp_max_distance,
-          Vector5d trunc_dist, bool save_immediate_result)
+          Vector5d trunc_dist, bool save_immediate_result, bool evaluate_mme, bool evaluate_gt_mme)
             : evaluation_map_pcd_path_(evaluation_map_pcd_path),
               map_gt_path_(map_gt_path),
               result_path_(result_path),
               initial_matrix_(initial_matrix),
               name_(name),
               evaluation_method_(method),
-            // voxel_dim_(dim),
               icp_max_distance_(icp_max_distance),
               trunc_dist_(trunc_dist),
             // colorbar_max_unit_(colorbar_max_unit),
-              save_immediate_result_(save_immediate_result) {}
+              save_immediate_result_(save_immediate_result),
+              evaluate_mme_(evaluate_mme), evaluate_gt_mme_(evaluate_gt_mme) {}
 
     void printParam() {
         std::cout
@@ -83,6 +85,8 @@ struct Param {
                 //        << "\n colorbar_max_unit: " << colorbar_max_unit_
                 << "\n trunc_dist: " << trunc_dist_.transpose()
                 << "\n save_immediate_result: " << save_immediate_result_
+                << "\n evaluate_mme_: " << evaluate_mme_
+                << "\n evaluate_gt_mme_: " << evaluate_gt_mme_
                 << "\n "
                    "===========================================================\n ";
     }
@@ -203,7 +207,7 @@ private:
     std::vector<double> est_entropies, gt_entropies;
     std::vector<bool> valid_entropy_points;
     double mme_est = 0.0, mme_gt = 0.0;
-    double max_abs_entropy  = 0.0, min_abs_entropy = 0.0;
+    double max_abs_entropy = 0.0, min_abs_entropy = 0.0;
     double mean_entropy = 0.0;
     int valid_points = 0;
     std::atomic<int> processed_points;
