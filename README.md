@@ -33,6 +33,7 @@ make install
 git clone https://github.com/JokerJohn/Cloud_Map_Evaluation.git
 cd Cloud_Map_Evaluation/cloud_map_eval && mkdir build
 cmake ..
+make
 ./cloud_map_eval
 ```
 
