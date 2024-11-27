@@ -40,24 +40,25 @@ These complementary aspects require different evaluation approaches, as global d
 | ![image-20241127084229287](./README/image-20241127084229287.png) |
 | ------------------------------------------------------------ |
 
-
-
 ## News
 
 - **2024/11/26**: Submitted to a Journal. When the paper accepted, the new version of codes will release! 
 
 ## Datasets
 
-### MS-dataset
+### [MS-dataset](https://github.com/JokerJohn/MS-Dataset)
 
 | ![image-20241127083256739](./README/image-20241127083256739.png) |
 | ------------------------------------------------------------ |
 
 ### [FusionPortable (FP) and FusionPortableV2 dataset](https://fusionportable.github.io/dataset/fusionportable_v2/)
 
-### [Newer College(NC)](https://ori-drs.github.io/newer-college-dataset/)
+### [Newer College (NC)](https://ori-drs.github.io/newer-college-dataset/)
 
-[### GEODE dataset](https://github.com/PengYu-Team/GEODE_dataset)
+### [ GEODE dataset (GE)](https://github.com/PengYu-Team/GEODE_dataset)
+
+| ![image-20241127091224755](./README/image-20241127091224755.png) |
+| ------------------------------------------------------------ |
 
 
 
@@ -107,8 +108,6 @@ These complementary aspects require different evaluation approaches, as global d
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | MCR_slow                                                     | [map.pcd](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/ES9eSANEr-9NvkFqMzMFsecBo5r3hBpBnj0c6BMPgsfXnQ?e=aijdPf) | [map_gt.pcd](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/ESfn5EEsiPlCiJcydVc_HqgBDGqy65MHoyu63XE-iKbFBQ?e=dTDon4) |
 | [FusionPortable Dataset](https://ram-lab.com/file/site/fusionportable/dataset/fusionportable/#download) |                                                              |                                                              |
-
-
 
 ### Usage
 
@@ -218,8 +217,6 @@ we can use [CloudCompare](https://github.com/CloudCompare/CloudCompare) to align
 The primary function of the r**aw rendered map** (left) is to color-code the error of all points in the map estimated by the algorithm. For each point in the estimated map that does not find a corresponding point in the **ground truth (gt) map**, it is defaulted to the maximum error (**20cm**), represented as red. On the other hand, the i**nlier rendered map** (right) excludes the non-overlapping regions of the point cloud and colors only the error of the inlier points after point cloud matching. This map therefore contains only a portion of the points from the original estimated map.
 
 ![image (6)](./README/image%20(6).png)
-
-
 
 
 ## Publications
