@@ -1,6 +1,7 @@
 <div align="center">
 
 <h1>MapEval: Towards Unified, Robust and Efficient SLAM Map Evaluation Framework</h1>
+
 [**Xiangcheng Hu**](https://github.com/JokerJohn)<sup>1</sup> · [**Jin Wu**](https://zarathustr.github.io/)<sup>1</sup> · [**Mingkai  Jia**](https://github.com/MKJia)<sup>1*</sup>· [**Hongyu  Yan**](https://scholar.google.com/citations?user=TeKnXhkAAAAJ&hl=zh-CN)<sup>1*</sup>· [**Yi  Jiang**](https://yijiang1992.github.io/)<sup>2*</sup>· [**Binqian  Jiang**](https://github.com/lewisjiang/)<sup>1*</sup>
 <br>
 [**Wei Zhang**](https://ece.hkust.edu.hk/eeweiz)<sup>1</sup> · [**Wei  He**](https://sites.google.com/view/drweihecv/home/)<sup>3</sup> · [**Ping Tan**](https://facultyprofiles.hkust.edu.hk/profiles.php?profile=ping-tan-pingtan#publications)<sup>1*&dagger;</sup>
@@ -36,7 +37,10 @@ These complementary aspects require different evaluation approaches, as global d
 - **Average Wasserstein Distance** (AWD): Robust global geometric accuracy assessment
 - **Spatial Consistency Score** (SCS): Enhanced local consistency evaluation
 
-![image-20241127084229287](./README/image-20241127084229287.png)
+| ![image-20241127084229287](./README/image-20241127084229287.png) |
+| ------------------------------------------------------------ |
+
+
 
 ## News
 
@@ -46,7 +50,8 @@ These complementary aspects require different evaluation approaches, as global d
 
 ### MS-dataset
 
-![image-20241127083256739](./README/image-20241127083256739.png)
+| ![image-20241127083256739](./README/image-20241127083256739.png) |
+| ------------------------------------------------------------ |
 
 ### [FusionPortable (FP) and FusionPortableV2 dataset](https://fusionportable.github.io/dataset/fusionportable_v2/)
 
@@ -78,13 +83,13 @@ These complementary aspects require different evaluation approaches, as global d
 
 ## Computational Efficiency
 
-![image-20241127084143144](./README/image-20241127084143144.png)
-
-
+| ![image-20241127084143144](./README/image-20241127084143144.png) |
+| ------------------------------------------------------------ |
 
 ## Parameter Sensitivity Analysis
 
-![image-20241127084154114](./README/image-20241127084154114.png)
+| ![image-20241127084154114](./README/image-20241127084154114.png) |
+| ------------------------------------------------------------ |
 
 
 
