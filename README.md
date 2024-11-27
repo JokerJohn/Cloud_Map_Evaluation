@@ -1,22 +1,111 @@
-# Cloud Map Evaluation
-Point cloud map evaluation library  for the [FusionPortable](https://ram-lab.com/file/site/fusionportable/dataset/fusionportable/) dataset.  The Metrics include RMSE, Accuracy(mean error), Precision(standard deviation), Completeness(overlap ratio), Chamfer distance(CD) and F1-score at all levels of `1/2/5/10/20`cm.  For those do not have ground truth maps, we use Mean Map Entropy (MME).
+<div align="center">
 
-**Author**: Xiangcheng HU, [Jiaojian Hao](https://github.com/gogojjh).
+<h1>MapEval: Towards Unified, Robust and Efficient SLAM Map Evaluation Framework</h1>
+[**Xiangcheng Hu**](https://github.com/JokerJohn)<sup>1</sup> · [**Jin Wu**](https://zarathustr.github.io/)<sup>1</sup> · [**Mingkai  Jia**](https://github.com/MKJia)<sup>1*</sup>· [**Hongyu  Yan**](https://scholar.google.com/citations?user=TeKnXhkAAAAJ&hl=zh-CN)<sup>1*</sup>· [**Yi  Jiang**](https://yijiang1992.github.io/)<sup>2*</sup>· [**Binqian  Jiang**](https://github.com/lewisjiang/)<sup>1*</sup>
+<br>
+[**Wei Zhang**](https://ece.hkust.edu.hk/eeweiz)<sup>1</sup> · [**Wei  He**](https://sites.google.com/view/drweihecv/home/)<sup>3</sup> · [**Ping Tan**](https://facultyprofiles.hkust.edu.hk/profiles.php?profile=ping-tan-pingtan#publications)<sup>1*&dagger;</sup>
 
-## Dependencies
+<sup>1</sup>HKUST&emsp;&emsp;&emsp;<sup>2</sup>CityU&emsp;&emsp;&emsp;<sup>3</sup>USTB  
+<br>
+&dagger;project lead&emsp;*corresponding author
+
+![image-20241127080805642](./README/image-20241127080805642.png)
+
+<a href="https://ieeexplore.ieee.org/document/10480308"><img src='https://img.shields.io/badge/Arxiv 2024- MapEval -red' alt='Paper PDF'></a><a ><img alt="PRs-Welcome" src="https://img.shields.io/badge/PRs-Welcome-white" /></a>[![GitHub Stars](https://img.shields.io/github/stars/JokerJohn/Cloud_Map_Evaluation.svg)](https://github.com/JokerJohn/Cloud_Map_Evaluation/stargazers)<a href="https://github.com/JokerJohn/PALoc/network/members">
+<img alt="FORK" src="https://img.shields.io/github/forks/JokerJohn/Cloud_Map_Evaluation?color=white" />
+</a> [![GitHub Issues](https://img.shields.io/github/issues/JokerJohn/Cloud_Map_Evaluation.svg)](https://github.com/JokerJohn/Cloud_Map_Evaluation/issues)[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+</div>
+
+MapEval is a comprehensive framework for evaluating point cloud maps in SLAM systems, addressing two fundamentally distinct aspects of map quality assessment:
+1. **Global Geometric Accuracy**: Measures the absolute geometric fidelity of the reconstructed map compared to ground truth. This aspect is crucial as SLAM systems often accumulate drift over long trajectories, leading to global deformation.
+2. **Local Structural Consistency**: Evaluates the preservation of local geometric features and structural relationships, which is essential for tasks like obstacle avoidance and local planning, even when global accuracy may be compromised.
+
+These complementary aspects require different evaluation approaches, as global drift may exist despite excellent local reconstruction, or conversely, good global alignment might mask local inconsistencies. Our framework provides a unified solution through both traditional metrics and novel evaluation methods based on optimal transport theory.
+
+## Key Features
+
+**Traditional Metrics Implementation**:
+
+- **Accuracy** (AC): Point-level geometric error assessment
+- **Completeness** (COM): Map coverage evaluation
+- **Chamfer Distance** (CD): Bidirectional point cloud difference
+- **Mean Map Entropy** (MME): Information-theoretic local consistency metric
+
+**Novel Proposed Metrics**:
+- **Average Wasserstein Distance** (AWD): Robust global geometric accuracy assessment
+- **Spatial Consistency Score** (SCS): Enhanced local consistency evaluation
+
+![image-20241127084229287](./README/image-20241127084229287.png)
+
+## News
+
+- **2024/11/26**: Submitted to a Journal. When the paper accepted, the new version of codes will release! 
+
+## Datasets
+
+### MS-dataset
+
+![image-20241127083256739](./README/image-20241127083256739.png)
+
+### [FusionPortable (FP) and FusionPortableV2 dataset](https://fusionportable.github.io/dataset/fusionportable_v2/)
+
+### [Newer College(NC)](https://ori-drs.github.io/newer-college-dataset/)
+
+[### GEODE dataset](https://github.com/PengYu-Team/GEODE_dataset)
+
+
+
+## Results
+
+### Simulated experiments
+
+| Noise Sensitivity                                            | Outlier Robustness                                           |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| ![image-20241127083549685](./README/image-20241127083549685.png) | ![image-20241127083603307](./README/image-20241127083603307.png) |
+
+![image-20241127083707943](./README/image-20241127083707943.png)
+
+### Real-world experiments
+
+| Map Evaluation via Localization Accuracy                     | Map Evaluation in Diverse Environments                       |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| ![image-20241127083813797](./README/image-20241127083813797.png) | ![image-20241127083801691](./README/image-20241127083801691.png) |
+
+| ![image-20241127083906299](./README/image-20241127083906299.png) |
+| ------------------------------------------------------------ |
+| ![image-20241127083957970](./README/image-20241127083957970.png) |
+
+## Computational Efficiency
+
+![image-20241127084143144](./README/image-20241127084143144.png)
+
+
+
+## Parameter Sensitivity Analysis
+
+![image-20241127084154114](./README/image-20241127084154114.png)
+
+
+
+## Quickly Run
+
+### Dependencies
 
 - *[Open3d ( >= 0.11)](https://github.com/isl-org/Open3D)* 
 
 - Eigen3
 
-## Test Data(password: 1)
+### Test Data(password: 1)
 
 | sequence                                                     | Test PCD                                                     | GT PCD                                                       |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | MCR_slow                                                     | [map.pcd](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/ES9eSANEr-9NvkFqMzMFsecBo5r3hBpBnj0c6BMPgsfXnQ?e=aijdPf) | [map_gt.pcd](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/ESfn5EEsiPlCiJcydVc_HqgBDGqy65MHoyu63XE-iKbFBQ?e=dTDon4) |
 | [FusionPortable Dataset](https://ram-lab.com/file/site/fusionportable/dataset/fusionportable/#download) |                                                              |                                                              |
 
-## Usage
+
+
+### Usage
 
 1. install open3d. (maybe a higer version of CMake is needed)
 
@@ -82,7 +171,7 @@ we can also get a simpe mesh reconstructed from point cloud map.
 
 ![image-20240127213557574](./README/image-20240127213557574.png)
 
-## Important Parameters
+### Important Parameters
 
 ```c++
 bool eva_mesh = false;  // if we construct a simple meth.
@@ -125,20 +214,14 @@ The primary function of the r**aw rendered map** (left) is to color-code the err
 
 ![image (6)](./README/image%20(6).png)
 
+
+
+
 ## Publications
 
 We kindly recommend to cite [our paper](https://arxiv.org/abs/2208.11865) if you find this library useful:
 
 ```latex
-@inproceedings{jiao2022fusionportable,
-  title        = {Fusionportable: A multi-sensor campus-scene dataset for evaluation of localization and mapping accuracy on diverse platforms},
-  author       = {Jiao, Jianhao and Wei, Hexiang and Hu, Tianshuai and Hu, Xiangcheng and Zhu, Yilong and He, Zhijian and Wu, Jin and Yu, Jingwen and Xie, Xupeng and Huang, Huaiyang and others},
-  booktitle    = {2022 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
-  pages        = {3851--3856},
-  year         = {2022},
-  organization = {IEEE}
-}
-
 @ARTICLE{hu2024paloc,
   author={Hu, Xiangcheng and Zheng, Linwei and Wu, Jin and Geng, Ruoyu and Yu, Yang and Wei, Hexiang and Tang, Xiaoyu and Wang, Lujia and Jiao, Jianhao and Liu, Ming},
   journal={IEEE/ASME Transactions on Mechatronics}, 
@@ -151,3 +234,9 @@ We kindly recommend to cite [our paper](https://arxiv.org/abs/2208.11865) if you
   }
 
 ```
+
+## Contributors
+
+<a href="https://github.com/JokerJohn/Cloud_Map_Evaluation/graphs/contributors">
+  <img src="./README/Cloud_Map_Evaluation.svg+xml" />
+</a>
