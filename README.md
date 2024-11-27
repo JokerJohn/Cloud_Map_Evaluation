@@ -37,8 +37,10 @@ These complementary aspects require different evaluation approaches, as global d
 - **Average Wasserstein Distance** (AWD): Robust global geometric accuracy assessment
 - **Spatial Consistency Score** (SCS): Enhanced local consistency evaluation
 
-| ![image-20241127084229287](./README/image-20241127084229287.png) |
-| ------------------------------------------------------------ |
+<div align="center">
+
+![image-20241127084229287](./README/image-20241127084229287.png) 
+</div>
 
 ## News
 
@@ -48,8 +50,9 @@ These complementary aspects require different evaluation approaches, as global d
 
 ### [MS-dataset](https://github.com/JokerJohn/MS-Dataset)
 
-| ![image-20241127083256739](./README/image-20241127083256739.png) |
-| ------------------------------------------------------------ |
+<div align="center">
+![image-20241127083256739](./README/image-20241127083256739.png)
+</div>
 
 ### [FusionPortable (FP) and FusionPortableV2 dataset](https://fusionportable.github.io/dataset/fusionportable_v2/)
 
@@ -57,10 +60,10 @@ These complementary aspects require different evaluation approaches, as global d
 
 ### [ GEODE dataset (GE)](https://github.com/PengYu-Team/GEODE_dataset)
 
-| ![image-20241127091224755](./README/image-20241127091224755.png) |
-| ------------------------------------------------------------ |
+<div align="center">
 
-
+ ![image-20241127091224755](./README/image-20241127091224755.png) 
+ </div>
 
 ## Results
 
