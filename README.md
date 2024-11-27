@@ -49,16 +49,8 @@ These complementary aspects require different evaluation approaches, as global d
 ## Datasets
 
 ### [MS-dataset](https://github.com/JokerJohn/MS-Dataset)
-
-<div align="center">
-
-![image-20241127083256739](./README/image-20241127083256739.png)
-</div>
-
 ### [FusionPortable (FP) and FusionPortableV2 dataset](https://fusionportable.github.io/dataset/fusionportable_v2/)
-
 ### [Newer College (NC)](https://ori-drs.github.io/newer-college-dataset/)
-
 ### [ GEODE dataset (GE)](https://github.com/PengYu-Team/GEODE_dataset)
 
 <div align="center">
