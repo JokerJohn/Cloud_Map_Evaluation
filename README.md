@@ -220,6 +220,17 @@ The primary function of the r**aw rendered map** (left) is to color-code the err
 We kindly recommend to cite [our paper](https://arxiv.org/abs/2208.11865) if you find this library useful:
 
 ```latex
+@misc{hu2024mapevalunifiedrobustefficient,
+      title={MapEval: Towards Unified, Robust and Efficient SLAM Map Evaluation Framework}, 
+      author={Xiangcheng Hu and Jin Wu and Mingkai Jia and Hongyu Yan and Yi Jiang and Binqian Jiang and Wei Zhang and Wei He and Ping Tan},
+      year={2024},
+      eprint={2411.17928},
+      archivePrefix={arXiv},
+      primaryClass={cs.RO},
+      url={https://arxiv.org/abs/2411.17928}, 
+}
+
+
 @ARTICLE{hu2024paloc,
   author={Hu, Xiangcheng and Zheng, Linwei and Wu, Jin and Geng, Ruoyu and Yu, Yang and Wei, Hexiang and Tang, Xiaoyu and Wang, Lujia and Jiao, Jianhao and Liu, Ming},
   journal={IEEE/ASME Transactions on Mechatronics}, 
