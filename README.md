@@ -35,18 +35,17 @@ These complementary aspects require different evaluation approaches, as global d
 - **Mean Map Entropy** (MME): Information-theoretic local consistency metric
 
 **Novel Proposed Metrics**:
+
 - **Average Wasserstein Distance** (AWD): Robust global geometric accuracy assessment
 - **Spatial Consistency Score** (SCS): Enhanced local consistency evaluation
 
 <div align="center">
-
-![image-20241127084229287](./README/image-20241127084229287.png) 
+![image-20241129091604653](./README/image-20241129091604653.png)
 </div>
 
 ## News
 
 - **2024/11/26**: Submitted to a Journal. When the paper accepted, the new version of codes will release! 
-
 
 ## Results
 
@@ -54,7 +53,7 @@ These complementary aspects require different evaluation approaches, as global d
 
 | Noise Sensitivity                                            | Outlier Robustness                                           |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| ![image-20241127083549685](./README/image-20241127083549685.png) | ![image-20241127083603307](./README/image-20241127083603307.png) |
+| ![image-20241129091823199](./README/image-20241129091823199.png) | ![image-20241129091845196](./README/image-20241129091845196.png) |
 
 ![image-20241127083707943](./README/image-20241127083707943.png)
 
@@ -64,13 +63,13 @@ These complementary aspects require different evaluation approaches, as global d
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | ![image-20241127083813797](./README/image-20241127083813797.png) | ![image-20241127083801691](./README/image-20241127083801691.png) |
 
-| ![image-20241127083906299](./README/image-20241127083906299.png) |
+| ![image-20241129092052634](./README/image-20241129092052634.png) |
 | ------------------------------------------------------------ |
-| ![image-20241127083957970](./README/image-20241127083957970.png) |
+| ![image-20241129092017261](./README/image-20241129092017261.png) |
 
 ## Computational Efficiency
 
-| ![image-20241127084143144](./README/image-20241127084143144.png) |
+| ![image-20241129091927786](./README/image-20241129091927786.png) |
 | ------------------------------------------------------------ |
 
 ## Parameter Sensitivity Analysis
@@ -81,13 +80,14 @@ These complementary aspects require different evaluation approaches, as global d
 ## Datasets
 
 ### [MS-dataset](https://github.com/JokerJohn/MS-Dataset)
+
 ### [FusionPortable (FP) and FusionPortableV2 dataset](https://fusionportable.github.io/dataset/fusionportable_v2/)
 ### [Newer College (NC)](https://ori-drs.github.io/newer-college-dataset/)
+
 ### [ GEODE dataset (GE)](https://github.com/PengYu-Team/GEODE_dataset)
 
 <div align="center">
-
- ![image-20241127091224755](./README/image-20241127091224755.png) 
+![image-20241129091746334](./README/image-20241129091746334.png)
  </div>
 
 ## Quickly Run
