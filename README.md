@@ -85,6 +85,7 @@ These complementary aspects require different evaluation approaches, as global d
 | ----------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
 
 <div align="center">
+
 ![image-20241129091746334](./README/image-20241129091746334.png)
  </div>
 
@@ -93,7 +94,6 @@ These complementary aspects require different evaluation approaches, as global d
 ### Dependencies
 
 - *[Open3d ( >= 0.11)](https://github.com/isl-org/Open3D)* 
-
 - Eigen3
 
 ### Test Data(password: 1)
