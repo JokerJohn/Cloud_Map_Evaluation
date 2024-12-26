@@ -25,6 +25,10 @@ MapEval is a comprehensive framework for evaluating point cloud maps in SLAM sys
 
 These complementary aspects require different evaluation approaches, as global drift may exist despite excellent local reconstruction, or conversely, good global alignment might mask local inconsistencies. Our framework provides a unified solution through both traditional metrics and novel evaluation methods based on optimal transport theory.
 
+## News
+
+- **2024/11/26**: Submitted to a Journal. When the paper accepted, **the new version of codes** will release! 
+
 ## Key Features
 
 **Traditional Metrics Implementation**:
@@ -44,9 +48,7 @@ These complementary aspects require different evaluation approaches, as global d
 ![image-20241129091604653](./README/image-20241129091604653.png)
 </div>
 
-## News
 
-- **2024/11/26**: Submitted to a Journal. When the paper accepted, the new version of codes will release! 
 
 ## Results
 
@@ -231,18 +233,15 @@ We kindly recommend to cite [our paper](https://arxiv.org/abs/2208.11865) if you
       url={https://arxiv.org/abs/2411.17928}, 
 }
 
-
 @ARTICLE{hu2024paloc,
   author={Hu, Xiangcheng and Zheng, Linwei and Wu, Jin and Geng, Ruoyu and Yu, Yang and Wei, Hexiang and Tang, Xiaoyu and Wang, Lujia and Jiao, Jianhao and Liu, Ming},
   journal={IEEE/ASME Transactions on Mechatronics}, 
   title={PALoc: Advancing SLAM Benchmarking With Prior-Assisted 6-DoF Trajectory Generation and Uncertainty Estimation}, 
   year={2024},
-  volume={},
-  number={},
-  pages={1-12},
-  doi={10.1109/TMECH.2024.3362902}
-  }
-
+  volume={29},
+  number={6},
+  pages={4297-4308},
+  doi={10.1109/TMECH.2024.3362902}}
 ```
 
 ## Contributors
@@ -250,3 +249,4 @@ We kindly recommend to cite [our paper](https://arxiv.org/abs/2208.11865) if you
 <a href="https://github.com/JokerJohn/Cloud_Map_Evaluation/graphs/contributors">
   <img src="./README/Cloud_Map_Evaluation.svg+xml" />
 </a>
+
