@@ -54,7 +54,7 @@ These complementary aspects require different evaluation approaches, as global d
 
 | Noise Sensitivity                                            | Outlier Robustness                                           |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| ![image-20241129091823199](./README/image-20241129091823199.png) | ![image-20241129091845196](./README/image-20241129091845196.png) |
+| ![image-20241129123446075](./README/image-20241129123446075.png) | ![image-20241129091845196](./README/image-20241129091845196.png) |
 
 ![image-20241127083707943](./README/image-20241127083707943.png)
 
@@ -66,7 +66,6 @@ These complementary aspects require different evaluation approaches, as global d
 
 | ![image-20241129092052634](./README/image-20241129092052634.png) |
 | ------------------------------------------------------------ |
-| ![image-20241129092017261](./README/image-20241129092017261.png) |
 
 ## Computational Efficiency
 
