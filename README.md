@@ -220,7 +220,7 @@ The primary function of the r**aw rendered map** (left) is to color-code the err
 
 ## Publications
 
-We kindly recommend to cite [our paper](https://arxiv.org/abs/2208.11865) if you find this library useful:
+We kindly recommend to cite [our paper](https://arxiv.org/abs/2411.17928) if you find this library useful:
 
 ```latex
 @misc{hu2024mapevalunifiedrobustefficient,
@@ -249,4 +249,3 @@ We kindly recommend to cite [our paper](https://arxiv.org/abs/2208.11865) if you
 <a href="https://github.com/JokerJohn/Cloud_Map_Evaluation/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=JokerJohn/Cloud_Map_Evaluation" />
 </a>
-
