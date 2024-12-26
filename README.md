@@ -247,6 +247,6 @@ We kindly recommend to cite [our paper](https://arxiv.org/abs/2208.11865) if you
 ## Contributors
 
 <a href="https://github.com/JokerJohn/Cloud_Map_Evaluation/graphs/contributors">
-  <img src="./README/Cloud_Map_Evaluation.svg+xml" />
+  <img src="https://contrib.rocks/image?repo=JokerJohn/Cloud_Map_Evaluation" />
 </a>
 
