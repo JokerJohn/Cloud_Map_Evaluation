@@ -1,0 +1,26 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/xchu/jw_ws/devel/include/**",
+        "/opt/ros/noetic/include/**",
+        "/home/xchu/jw_ws/src/gnss_fusion/include/**",
+        "/home/xchu/jw_ws/src/lio_mapping_ouster128/lio-mapping/include/**",
+        "/home/xchu/jw_ws/src/LIO_SAM_6AXIS/LIO-SAM-6AXIS/include/**",
+        "/home/xchu/jw_ws/src/paloc/include/**",
+        "/home/xchu/jw_ws/src/pose_slam/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

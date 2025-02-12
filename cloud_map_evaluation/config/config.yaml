@@ -1,0 +1,58 @@
+
+# registration methods: 0-point-to-point icp; 1-point-to-plane icp; 2-GICP
+registration_methods: 2
+# set icp_max_distance when search the nearest point, larger value will make the search slower
+icp_max_distance: 1.0
+
+# accuracy_level, vector5d, we mainly use the result of the first element
+# if inlier is very small, we can try to larger the value, e.g. for outdoors, [0.5, 0.3, 0.2, 0.1, 0.05]
+accuracy_level: [0.2, 0.1, 0.08, 0.05, 0.01]
+
+# initial_matrix, vector16d, the initial matrix of the registration
+# make sure the format is correct, or you will got the error log: YAML::BadSubscript' what():  operator[] call on a scalar
+initial_matrix:
+  - [1.0, 0.0, 0.0, 0.0]
+  - [0.0, 1.0, 0.0, 0.0]
+  - [0.0, 0.0, 1.0, 0.0]
+  - [0.0, 0.0, 0.0, 1.0]
+
+# estimate map folder path, end with "/", make sure your estimate point cloud and map is renamed as "map.pcd"
+# results path will also in the same folder:  estimate_map_path + "map_results"
+estimate_map_path: /home/xchu/data/ltloc_result/parkinglot_raw_3_0.5/
+
+# ground truth map file path
+# note that we support ".pcd" or ".ply" format for ground truth map loading
+gt_map_path: /media/xchu/e81eaf80-d92c-413a-a503-1c9b35b19963/home/xchu/data/evaluation/est_file/redbird_02/hkustgz_gt_filter.pcd
+
+
+# scene name
+scene_name: redbird_02
+
+# other settings
+# if we save the immediate result to a text file
+save_immediate_result: true
+
+# if evaluate Mean Map Entropy (MME) if you do not have ground truth map
+# but remember, MME can be only used for map comparison  with the same scale, e.g., maps are for odometry.
+# it costs a lot of time to calculate MME, so we set it as false by default
+evaluate_mme: false
+
+# if we have ground truth map, we also want to evaluate the MME of the ground truth map
+evaluate_gt_mme: false
+
+# NN search radius for MME calculation (m)
+nn_radius: 0.1
+
+# if we want to evaluate the registration result using initial matrix without alignments, this operation will save time
+# e.g. the estimate map is already aligned with the ground truth map
+evaluate_using_initial: false
+
+# we want to add noise to the ground truth map, and evaluate the registration result
+# note that true will cause the system do not load the estimate map, instead the noise gt_map will be used
+# just for algorithm robustness evaluation experiments, not for real-world application
+# do not recommand to set it as true, since it will cause the memory overflow
+evaluate_noise_gt: false
+
+# vmd voxel size
+# outdoor: 2.0-4.0; indoor: 2.0-3.0
+vmd_voxel_size: 3.0
