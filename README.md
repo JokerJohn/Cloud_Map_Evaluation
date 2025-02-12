@@ -98,10 +98,9 @@ These complementary aspects require different evaluation approaches, as global d
 
 ### Test Data(password: 1)
 
-| sequence                                                     | Test PCD                                                     | GT PCD                                                       |
-| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| MCR_slow                                                     | [map.pcd](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/ES9eSANEr-9NvkFqMzMFsecBo5r3hBpBnj0c6BMPgsfXnQ?e=aijdPf) | [map_gt.pcd](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/ESfn5EEsiPlCiJcydVc_HqgBDGqy65MHoyu63XE-iKbFBQ?e=dTDon4) |
-| [FusionPortable Dataset](https://ram-lab.com/file/site/fusionportable/dataset/fusionportable/#download) |                                                              |                                                              |
+| sequence | Test PCD                                                     | GT PCD                                                       |
+| -------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| MCR_slow | [map.pcd](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/ES9eSANEr-9NvkFqMzMFsecBo5r3hBpBnj0c6BMPgsfXnQ?e=aijdPf) | [map_gt.pcd](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/ESfn5EEsiPlCiJcydVc_HqgBDGqy65MHoyu63XE-iKbFBQ?e=dTDon4) |
 
 ### Usage
 
@@ -124,7 +123,7 @@ make
 ./map_eval
 ```
 
-3. set some params in `config.yaml`
+3. set some params in `config/config.yaml`
 
 ```yaml
 # accuracy_level, vector5d, we mainly use the result of the first element
