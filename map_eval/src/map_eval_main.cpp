@@ -8,11 +8,14 @@
 *  The code is open-source and can be freely used for research purposes.
 *  If you use this code in your research, please consider citing the following paper:
 *  MapEval: Towards Unified, Robust and Efficient SLAM Map Evaluation Framework (https://arxiv.org/abs/2411.17928)
-*  
+* 
+*  In a normal scenario, we recommend using the AC, CD, or AWD metrics to evaluate the accuracy of the SLAM maps.
+*  But when you do not have the ground truth map, you can use the MME.
+*
 *  The code is written in C++ and uses the Open3D library just for demo testing.
-*  The code is actively maintained and updated to incorporate new features and improvements.
+*  We appreciate any contributions to the project, and you can pull requests to the GitHub repository. 
 *  For more information about the MapEval project, please visit the project website: https://github.com/JokerJohn/Cloud_Map_Evaluation
-*  Copyright (C) 2025, RoHong Kong University of Science and Technology
+*  Copyright (C) 2025, Hong Kong University of Science and Technology.
 */
 
 #include "map_eval.h"
@@ -56,8 +59,8 @@ int main(int argc, char **argv) {
 
     Param param(est_path, gt_path, results_path, initial_matrix, scene_name, method, icp_max_distance, accuracy_level, 
          save_immediate_result, evaluate_mme, evaluate_gt_mme, pcd_file_name, evaluate_using_initial_,  evaluate_noise_gt_, 0.01, nn_radius, vmd_voxel_size);
-    MapEval my_evaluation(param);
-    my_evaluation.process();
+    MapEval map_eval(param);
+    map_eval.process();
 
     return EXIT_SUCCESS;
 }

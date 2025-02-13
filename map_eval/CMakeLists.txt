@@ -1,14 +1,13 @@
 cmake_minimum_required(VERSION 3.12.0)
-project(cloud_map_evaluation)
+project(map_eval)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_BUILD_TYPE Release)
 
-find_package(Open3D 0.17.0 REQUIRED)
+find_package(Open3D REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(OpenMP REQUIRED)
 find_package(PCL REQUIRED)
-# add yaml dependencies
 find_package(yaml-cpp REQUIRED)
 
 include_directories(
@@ -19,7 +18,7 @@ include_directories(
         ${YAML_CPP_INCLUDE_DIR}
 )
 
-add_executable(map_eval src/map_eval.cpp src/map_eval_node.cpp src/voxel_calculator.cpp)
+add_executable(map_eval src/map_eval.cpp src/map_eval_main.cpp src/voxel_calculator.cpp)
 target_link_libraries(map_eval ${Open3D_LIBRARIES} ${PCL_LIBRARIES}  ${YAML_CPP_LIBRARIES})
 
 # If OpenMP is found, add the flags for OpenMP

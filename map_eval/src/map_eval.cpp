@@ -1,259 +1,280 @@
 #include "map_eval.h"
 
+
 int MapEval::process() {
     TicToc tic_toc;
     io::ReadPointCloudOption io_params("auto", true, true, true);
 
-    // load ground truth point cloud
-    if (param_.map_gt_path_.substr(param_.map_gt_path_.find_last_of(".") + 1) == "pcd") {
+    // Load ground truth point cloud
+    std::string file_extension = param_.map_gt_path_.substr(param_.map_gt_path_.find_last_of(".") + 1);
+    if (file_extension == "pcd") {
         io::ReadPointCloudFromPCD(param_.map_gt_path_, *gt_3d_, io_params);
-    } else if (param_.map_gt_path_.substr(param_.map_gt_path_.find_last_of(".") + 1) == "ply") {
+    } else if (file_extension == "ply") {
         io::ReadPointCloudFromPLY(param_.map_gt_path_, *gt_3d_, io_params);
-    } else { std::cerr << "Unsupported ground truth file format: " << param_.map_gt_path_ << std::endl; }
+    } else {
+        std::cerr << "ERROR: Unsupported ground truth file format: " << param_.map_gt_path_ << std::endl;
+        return -1;
+    }
 
-
-    Eigen::Vector3d center;
+    // Experimental mode: Add noise to ground truth for simulation
     if (param_.evaluate_noised_gt_) {
-        // Experimental mode: add noise to gt cloud
-        std::cout << "add noise to gt cloud!" << std::endl;
-        // add noise to gt cloud for evaluation
-        // 创建带噪声的GT点云副本
+        std::cout << "INFO: Adding noise to ground truth point cloud for simulation." << std::endl;
+
+        // Create noisy copy of the ground truth point cloud
         auto noised_gt_3d_raw = std::make_shared<open3d::geometry::PointCloud>(*gt_3d_);
-        // 根据实验类型选择不同的变形方式
+        Eigen::Vector3d center;
         int noise_type_ = 1;
+
+        // Apply different noise types based on experimental settings
         switch (noise_type_) {
             case 0:
-                addNonUniformDensity(noised_gt_3d_raw, 0.1, 0.9, 2.0); // 10%和90%的保留率
+                addNonUniformDensity(noised_gt_3d_raw, 0.1, 0.9, 2.0);  // Density variation
                 break;
             case 1:
-                //  add outlier
-                addSparseOutliers(noised_gt_3d_raw, 0.1, 1); // 1%的离群点，最大1米偏移
+                addSparseOutliers(noised_gt_3d_raw, 0.1, 1);  // Outlier addition
                 break;
             case 2:
-                // 在点云中心附近创建变形
                 center = noised_gt_3d_raw->GetCenter();
-                addLocalDeformation(noised_gt_3d_raw, 5.0, 0.5, center); // 2米半径，0.5米强度
+                addLocalDeformation(noised_gt_3d_raw, 5.0, 0.5, center);  // Local deformation
                 break;
             case 3:
-                addGaussianNoise(noised_gt_3d_raw, param_.noise_std_dev_);
+                addGaussianNoise(noised_gt_3d_raw, param_.noise_std_dev_);  // Gaussian noise
                 break;
         }
         map_3d_ = noised_gt_3d_raw;
         param_.initial_matrix_.setIdentity();
     } else {
-        // normal mode: load the point cloud to be evaluated
-        bool flag = io::ReadPointCloudFromPCD(param_.evaluation_map_pcd_path_ + param_.pcd_file_name_,
-                                              *map_3d_, io_params);
-        std::cout << "Estimate map pcd : " << param_.evaluation_map_pcd_path_ + param_.pcd_file_name_
-                  << std::endl;
-        if (!flag) return -1;
+        // Normal mode: Load the evaluation point cloud
+        bool success = io::ReadPointCloudFromPCD(param_.evaluation_map_pcd_path_ + param_.pcd_file_name_, *map_3d_, io_params);
+        std::cout << "INFO: Loading map point cloud from: " << param_.evaluation_map_pcd_path_ + param_.pcd_file_name_ << std::endl;
+        if (!success) {
+            std::cerr << "ERROR: Failed to load point cloud from the specified path." << std::endl;
+            return -1;
+        }
     }
 
+    // Check if the point clouds are empty
     if (map_3d_->IsEmpty() || gt_3d_->IsEmpty()) {
-        cout << "Empty point cloud detected" << endl;
+        std::cerr << "ERROR: One or both point clouds are empty!" << std::endl;
         return -1;
     }
-    // Downsampling for efficiency
+
+    // Downsample the point clouds for efficiency
     map_3d_ = map_3d_->VoxelDownSample(0.01);
     gt_3d_ = gt_3d_->VoxelDownSample(0.01);
-    //    open3d::io::WritePointCloud(resul bvts_subfolder + "gt_map_1cm.pcd",
-    //                                *gt_3d_);
+    //    open3d::io::WritePointCloud(resul bvts_subfolder + "gt_map_1cm.pcd",  *gt_3d_);
 
-    file_result << std::fixed << std::setprecision(15) << "est-gt points number: "
-                << map_3d_->points_.size() << " " << gt_3d_->points_.size() << std::endl;
-    std::cout << "1. load point size: " << map_3d_->points_.size() << ", "   << gt_3d_->points_.size() << ", " << t1 / 1000.0 << " [s]"  << std::endl;
-    t1 = tic_toc.toc();
 
-    //    map_3d_->EstimateNormals(geometry::KDTreeSearchParamHybrid(0.2, 20));
+    // Log the number of points in both point clouds
+    file_result << std::fixed << std::setprecision(15)
+                << "Estimated-Ground Truth point count: "
+                << map_3d_->points_.size() << " / " << gt_3d_->points_.size() << std::endl;
+    std::cout << "INFO: Loaded point clouds: " << map_3d_->points_.size() << " points (Map), "
+              << gt_3d_->points_.size() << " points (Ground Truth)." << std::endl;
+
+    // Perform MME calculation if enabled
     if (param_.evaluate_mme_) {
-        std::cout << "3. MM calculate....." << std::endl;
-        // 创建 map_3d 点云的副本
-        // std::shared_ptr<PointCloud> map_3d_copy = std::make_shared<PointCloud>(*map_3d_);
-        // std::shared_ptr<PointCloud> gt_3d_copy = std::make_shared<PointCloud>(*map_3d_);
+        std::cout << "INFO: Starting MME calculation..." << std::endl;
         computeMME(map_3d_, gt_3d_);
-        std::cout << "3.1. MME calculation finished! Start to save results." << std::endl;
-        if (param_.save_immediate_result_)
-            saveMmeResults();
+        std::cout << "INFO: MME calculation completed. Saving results." << std::endl;
+        if (param_.save_immediate_result_) saveMmeResults();
     }
-    t2 = tic_toc.toc();
-    std::cout << "3.2. estimate MME time: " << (t2 - t1) / 1000.0 << " [s]" << std::endl;
 
-    std::cout << "4. Registration start! " << std::endl;
-    // 点云匹配继续使用原始的 map_3d 点云
-    // calculate AC/CD/COM
+    // Log the MME calculation time
+    t2 = tic_toc.toc();
+    std::cout << "INFO: MME calculation completed in: " << (t2 - t1) / 1000.0 << " seconds." << std::endl;
+
+    // Start registration process
+    std::cout << "INFO: Starting registration..." << std::endl;
     if (param_.evaluate_using_initial_) {
-        // 直接使用初始矩阵计算map metric
-        std::cout << "4.1 Using initial matrix! " << std::endl;
+        std::cout << "INFO: Using initial matrix without registration." << std::endl;
         calculateMetricsWithInitialMatrix();
     } else {
-        std::cout << "4.2 Using ICP! " << std::endl;
+        std::cout << "INFO: Using ICP for registration." << std::endl;
         performRegistration();
     }
-    std::cout << "4. Registration calculation finished! Start to save results." << std::endl;
 
-    // calculate AWD and SCS
+    // Calculate additional metrics
     calculateVMD();
-    std::cout << "4.5 VMD calculation finished!" << std::endl;
+    std::cout << "INFO: VMD calculation completed." << std::endl;
 
-    std::cout << "5.0 Save results begin!" << std::endl;
-    if (param_.save_immediate_result_)
+    // Save registration results
+    if (param_.save_immediate_result_) {
+        std::cout << "INFO: Saving registration results..." << std::endl;
         saveRegistrationResults();
+    }
 
-    std::cout << "5. Save Results Finished! " << std::endl;
+    std::cout << "INFO: Results saved successfully." << std::endl;
     return 0;
 }
-
 
 void MapEval::computeMME() {
     if (param_.evaluate_mme_) {
         TicToc tic_toc;
-        // double radius = 0.2;
-        // mme_est = ComputeMeanMapEntropy(map_3d_, est_entropies, param_.nn_radius_);
+        // Compute Mean Map Entropy using normal-based method
         mme_est = ComputeMeanMapEntropyUsingNormal(map_3d_, est_entropies, param_.nn_radius_);
 
-        // 合并两个点云的熵值向量
-        // merge the entropy vectors of the two point clouds for proper scaling to colored the entropy cloud
-        //        std::vector<double> combined_entropies = est_entropies;  // 假设entropies已经包含了map_3d_的熵值
-        //        combined_entropies.insert(combined_entropies.end(), gt_entropies.begin(), gt_entropies.end());  // 添加gt_3d_的熵值
-        //        std::vector<double> non_zero_combined;
-        //        std::copy_if(combined_entropies.begin(), combined_entropies.end(), std::back_inserter(non_zero_combined),
-        //                     [](double val) { return val != 0.0; });
-        //        max_abs_entropy = std::fabs(*std::min_element(non_zero_combined.begin(), non_zero_combined.end()));
-        //        min_abs_entropy = std::fabs(*std::max_element(non_zero_combined.begin(), non_zero_combined.end()));
-        //        std::cout << "MAX MIN ENTROPY: " << max_abs_entropy << " " << min_abs_entropy << std::endl;
+        // Preserving commented-out lines for future use
+        // Merge entropy vectors from both point clouds (for coloring)
+        // std::vector<double> combined_entropies = est_entropies;  
+        // combined_entropies.insert(combined_entropies.end(), gt_entropies.begin(), gt_entropies.end());
+        // std::vector<double> non_zero_combined;
+        // std::copy_if(combined_entropies.begin(), combined_entropies.end(), std::back_inserter(non_zero_combined),
+        //              [](double val) { return val != 0.0; });
+        // max_abs_entropy = std::fabs(*std::min_element(non_zero_combined.begin(), non_zero_combined.end()));
+        // min_abs_entropy = std::fabs(*std::max_element(non_zero_combined.begin(), non_zero_combined.end()));
+        // std::cout << "MAX MIN ENTROPY: " << max_abs_entropy << " " << min_abs_entropy << std::endl;
 
         if (param_.evaluate_gt_mme_) {
-            std::cout << "Caculate GT MME... "<< std::endl;
+            std::cout << "INFO: Calculating GT MME..." << std::endl;
             mme_gt = ComputeMeanMapEntropy(gt_3d_, gt_entropies, param_.nn_radius_);
             std::cout << "MME EST-GT: " << mme_est << " " << mme_gt << std::endl;
         } else {
             std::cout << "MME EST: " << mme_est << std::endl;
         }
+
+        // Color point clouds based on entropy values
         map_3d_entropy = ColorPointCloudByMME(map_3d_, est_entropies);
         if (param_.evaluate_gt_mme_) {
-            /** since we finally scale the range of entropy, no need to use the common max and min value*/
+            // No need to use common max/min values after scaling
             gt_3d_entropy = ColorPointCloudByMME(gt_3d_, gt_entropies);
         }
-        std::cout << "3. MME Cost Time: " << (tic_toc.toc() - t2) / 1000.0 << " [s]" << std::endl;
-    }
 
+        // Log computation time for MME
+        std::cout << "INFO: MME Calculation Time: " << (tic_toc.toc() - t2) / 1000.0 << " [s]" << std::endl;
+    }
 }
 
 void MapEval::computeMME(shared_ptr<PointCloud> &cloud_, shared_ptr<PointCloud> &cloud_gt_) {
     if (param_.evaluate_mme_) {
         TicToc tic_toc;
-        // double radius = 0.1;
-        //mme_est = ComputeMeanMapEntropy(map_3d_, est_entropies, radius);
+        // Compute Mean Map Entropy for the given cloud
         mme_est = ComputeMeanMapEntropyUsingNormal(cloud_, est_entropies, param_.nn_radius_);
 
-        // 合并两个点云的熵值向量
-        //        std::vector<double> combined_entropies = est_entropies;  // 假设entropies已经包含了map_3d_的熵值
-        //        combined_entropies.insert(combined_entropies.end(), gt_entropies.begin(), gt_entropies.end());  // 添加gt_3d_的熵值
-        //        std::vector<double> non_zero_combined;
-        //        std::copy_if(combined_entropies.begin(), combined_entropies.end(), std::back_inserter(non_zero_combined),
-        //                     [](double val) { return val != 0.0; });
-        //        max_abs_entropy = std::fabs(*std::min_element(non_zero_combined.begin(), non_zero_combined.end()));
-        //        min_abs_entropy = std::fabs(*std::max_element(non_zero_combined.begin(), non_zero_combined.end()));
-        //        std::cout << "MAX MIN ENTROPY: " << max_abs_entropy << " " << min_abs_entropy << std::endl;
+        // Preserving commented-out lines for future use
+        // Merge entropy vectors for proper scaling (for coloring)
+        // std::vector<double> combined_entropies = est_entropies;
+        // combined_entropies.insert(combined_entropies.end(), gt_entropies.begin(), gt_entropies.end());
+        // std::vector<double> non_zero_combined;
+        // std::copy_if(combined_entropies.begin(), combined_entropies.end(), std::back_inserter(non_zero_combined),
+        //              [](double val) { return val != 0.0; });
+        // max_abs_entropy = std::fabs(*std::min_element(non_zero_combined.begin(), non_zero_combined.end()));
+        // min_abs_entropy = std::fabs(*std::max_element(non_zero_combined.begin(), non_zero_combined.end()));
+        // std::cout << "MAX MIN ENTROPY: " << max_abs_entropy << " " << min_abs_entropy << std::endl;
+
         if (param_.evaluate_gt_mme_) {
+            // Compute and log GT MME
             mme_gt = ComputeMeanMapEntropy(cloud_gt_, gt_entropies, param_.nn_radius_);
             std::cout << "MME EST-GT: " << mme_est << " " << mme_gt << std::endl;
         } else {
             std::cout << "MME EST: " << mme_est << std::endl;
         }
+
+        // Color point clouds based on entropy values
         map_3d_entropy = ColorPointCloudByMME(cloud_, est_entropies);
         if (param_.evaluate_gt_mme_) {
-            /** since we finally scale the range of entropy, no need to use the common max and min value*/
             gt_3d_entropy = ColorPointCloudByMME(cloud_gt_, gt_entropies);
         }
-        std::cout << "2. Calculate MME: " << (tic_toc.toc() - t2) / 1000.0 << " [s]" << std::endl;
+
+        // Log MME computation time
+        std::cout << "INFO: MME Calculation Time: " << (tic_toc.toc() - t2) / 1000.0 << " [s]" << std::endl;
     }
 }
 
 void MapEval::performRegistration() {
     TicToc tic_toc;
-    /** if building mesh */
+    
+    // Check if mesh creation is enabled
     if (eva_mesh) {
+        // Create meshes for ground truth and estimated point clouds
         gt_mesh = createMeshFromPCD(gt_3d_, 0.6, 10);
-        //    gt_mesh_filtered = gt_mesh->FilterSmoothLaplacian(10, 0.5);
-        //    gt_mesh_filtered->ComputeVertexNormals();
-        //    gt_mesh_filtered->PaintUniformColor({1, 0.7, 0});
-        //    visualization::DrawGeometries({gt_mesh_filtered}, "mesh result");
+        
+        // Preserving commented-out line for future mesh filtering
+        // gt_mesh_filtered = gt_mesh->FilterSmoothLaplacian(10, 0.5);
+        // gt_mesh_filtered->ComputeVertexNormals();
+        // gt_mesh_filtered->PaintUniformColor({1, 0.7, 0});
+        // visualization::DrawGeometries({gt_mesh_filtered}, "mesh result");
+
         est_mesh = createMeshFromPCD(map_3d_, 0.6, 10);
-        t3 = tic_toc.toc();
-        std::cout << "3. create mesh: " << (t3) / 1000.0 << " [s]" << std::endl;
+        t3 = tic_toc.toc();  // Measure time for mesh creation
+        std::cout << "INFO: Mesh creation time: " << (t3) / 1000.0 << " [s]" << std::endl;
     }
 
-    // ICP registration
+    // Perform ICP registration
     auto registration_result = performICPRegistration();
-    t4 = tic_toc.toc();
+    t4 = tic_toc.toc();  // Measure time for ICP
 
-    std::cout << "4. aligned cloud : " << (t4 - t3) / 1000.0 << " [s]"
-              << std::endl;
-    std::cout << "aligned transformation: \n" << trans << std::endl;
-    std::cout << "icp overlap ratio: " << registration_result.fitness_
-              << std::endl;
-    std::cout << "icp correspondences rmse: " << registration_result.inlier_rmse_
-              << std::endl;
-    std::cout << "icp correspondences size: "
-              << registration_result.correspondence_set_.size() << std::endl;
+    std::cout << "INFO: ICP registration time: " << (t4 - t3) / 1000.0 << " [s]" << std::endl;
+    std::cout << "INFO: Aligned transformation: \n" << trans << std::endl;
+    std::cout << "INFO: ICP overlap ratio: " << registration_result.fitness_ << std::endl;
+    std::cout << "INFO: ICP correspondences RMSE: " << registration_result.inlier_rmse_ << std::endl;
+    std::cout << "INFO: ICP correspondences size: " << registration_result.correspondence_set_.size() << std::endl;
 
+    // Log ICP results to the output file
     file_result << std::fixed << setprecision(5) << "Aligned cloud: " << trans.matrix() << std::endl;
     file_result << std::fixed << setprecision(5) << "Aligned results: " << registration_result.fitness_ << " "
                 << registration_result.correspondence_set_.size() << std::endl;
-    std::cout << "Aligned Results saved to " << results_file_path << std::endl;
+    std::cout << "INFO: Aligned results saved to " << results_file_path << std::endl;
 
-
-    // Calculate metrics and evaluate
-    //t5 = tic_toc.toc();
+    // Calculate metrics and evaluate the results
     calculateMetrics(registration_result);
-    t5 = tic_toc.toc();
-    std::cout << "6. calculate est-gt and gt-est metrics : " << (t7 - t5) / 1000.0 << " [s]"
-              << std::endl;
+    t5 = tic_toc.toc();  // Measure time for metric calculation
+    std::cout << "INFO: Metrics calculation time: " << (t7 - t5) / 1000.0 << " [s]" << std::endl;
 }
 
 
 void MapEval::calculateVMD() {
-
     TicToc ticToc;
 
-    // voxel
-    VoxelCalculator voxelCalculator;
-    // Create VoxelCalculator instances
-    // double voxel_size = 3.0;  // Adjust this value as needed
+    // Create VoxelCalculator instances for ground truth and estimated maps
     VoxelCalculator gt_calculator(param_.vmd_voxel_size_);
     VoxelCalculator est_calculator(param_.vmd_voxel_size_);
-    // Build GT voxel map
+    
+    // Build voxel maps for both GT and estimated maps
     gt_calculator.buildVoxelMap(*gt_3d_);
     est_calculator.buildVoxelMap(*map_3d_);
-    // Update EST voxel map to mark active, new, and old areas
+    
+    // Update the estimated voxel map with information from the ground truth
     est_calculator.updateVoxelMap(gt_calculator.getVoxelMap());
-    t_v = ticToc.toc();
+    t_v = ticToc.toc();  // Timing the process
 
-    // Compute Wasserstein distances and save results
+    // Prepare to write the voxel error results to a file
     std::ofstream output_file(results_subfolder + "voxel_errors.txt");
     if (!output_file.is_open()) {
-        std::cerr << "Failed to open output file." << std::endl;
-        //return 1;
+        std::cerr << "ERROR: Failed to open voxel error output file." << std::endl;
+        return;  // Early return on failure to open the file
     }
+
     const VoxelMap &gt_map = gt_calculator.getVoxelMap();
     const VoxelMap &est_map = est_calculator.getVoxelMap();
+    
+    // Map to store Wasserstein distances for active voxels
     std::unordered_map<Eigen::Vector3i, double, hash_eigen<Eigen::Vector3i>> wasserstein_distances;
+
+    // Loop over the estimated voxels and calculate Wasserstein distances for active ones
     for (const auto &kv : est_map) {
         const Eigen::Vector3i &index = kv.first;
         const VoxelInfo &est_voxel = kv.second;
+
         // Only process active voxels
         if (est_voxel.active == 1) {
             auto gt_it = gt_map.find(index);
             if (gt_it != gt_map.end()) {
                 const VoxelInfo &gt_voxel = gt_it->second;
+                
+                // Skip voxels with insufficient points
                 if (est_voxel.num_points < 100 || gt_voxel.num_points < 100)
                     continue;
+
+                // Compute the Wasserstein distance for the voxel pair
                 double ws_distance = est_calculator.computeWassersteinDistanceGaussian(gt_voxel, est_voxel);
                 wasserstein_distances[index] = ws_distance;
+
                 // Calculate voxel boundaries
                 Eigen::Vector3d voxel_min = index.cast<double>() * param_.vmd_voxel_size_;
                 Eigen::Vector3d voxel_max = (index.cast<double>() + Eigen::Vector3d::Ones()) * param_.vmd_voxel_size_;
+
+                // Output results to file
                 output_file << voxel_min.x() << " " << voxel_min.y() << " " << voxel_min.z() << " "
                             << voxel_max.x() << " " << voxel_max.y() << " " << voxel_max.z() << " "
                             << est_voxel.mu.x() << " " << est_voxel.mu.y() << " " << est_voxel.mu.z() << " "
@@ -264,111 +285,121 @@ void MapEval::calculateVMD() {
                             << gt_voxel.mu.x() << " " << gt_voxel.mu.y() << " " << gt_voxel.mu.z() << " "
                             << gt_voxel.sigma(0, 0) << " " << gt_voxel.sigma(0, 1) << " " << gt_voxel.sigma(0, 2)
                             << " " << gt_voxel.sigma(1, 1) << " " << gt_voxel.sigma(1, 2) << " "
-                            << gt_voxel.sigma(2, 2)
-                            << std::endl;
+                            << gt_voxel.sigma(2, 2) << std::endl;
             }
         }
     }
-    output_file.close();
-    std::cout << "voxel errors Results saved to " << results_subfolder + "voxel_errors.txt" << std::endl;
 
+    // Close output file after writing
+    output_file.close();
+    std::cout << "INFO: Voxel errors results saved to " << results_subfolder + "voxel_errors.txt" << std::endl;
+
+    // Calculate the mean Wasserstein distance
     std::vector<double> ws_distances;
     for (const auto &kv : wasserstein_distances) {
         ws_distances.push_back(kv.second);
     }
-    double mean_ws = std::accumulate(ws_distances.begin(), ws_distances.end(), 0.0) / ws_distances.size();
-    vmd = mean_ws;
-    t_vmd = ticToc.toc();
-    std::cout << "Calculate VMD: " << mean_ws << std::endl;
-
-
-    // std::cout << "Calculate CDF!" << std::endl;
-    double variance_ws = 0.0;
-    for (double w : ws_distances) {
-        variance_ws += (w - mean_ws) * (w - mean_ws);
-    }
-    variance_ws /= ws_distances.size();
-    // exists bugs here, wrong codes according to the eq.9
+    //     // exists bugs here, wrong codes according to the eq.9
     // double std_dev_ws = std::sqrt(variance_ws);
     // double w_3sigma = mean_ws + 3 * std_dev_ws;
     // std::cout << "3-Sigma Threshold: " << w_3sigma << std::endl;
 
+    // Calculate mean and report VMD
+    double mean_ws = std::accumulate(ws_distances.begin(), ws_distances.end(), 0.0) / ws_distances.size();
+    vmd = mean_ws;
+    t_vmd = ticToc.toc();  // Timing VMD calculation
+    std::cout << "INFO: Calculated VMD: " << mean_ws << std::endl;
+
+    // Optional: Calculate and report CDF of Wasserstein distances
     std::sort(ws_distances.begin(), ws_distances.end());
     std::ofstream cdf_file(results_subfolder + "voxel_wasserstein_cdf.txt");
     if (!cdf_file.is_open()) {
-        std::cerr << "Failed to open CDF output file." << std::endl;
+        std::cerr << "ERROR: Failed to open CDF output file." << std::endl;
+        return;  // Early return if file can't be opened
     }
+
     for (size_t i = 0; i < ws_distances.size(); ++i) {
         double cdf_value = static_cast<double>(i + 1) / ws_distances.size();
         cdf_file << ws_distances[i] << " " << cdf_value << std::endl;
     }
     cdf_file.close();
-    t_cdf = ticToc.toc();
-    std::cout << "CDF results saved to " << results_subfolder + "voxel_wasserstein_cdf.txt" << std::endl;
+    t_cdf = ticToc.toc();  // Timing CDF calculation
+    std::cout << "INFO: CDF results saved to " << results_subfolder + "voxel_wasserstein_cdf.txt" << std::endl;
 
-    // calculate SCS score
-    std::cout << "Calculate SScore..." << std::endl;
+    // Calculate the Spatial Consistency Score (SCS)
+    std::cout << "INFO: Calculating Spatial Consistency Score (SCS)..." << std::endl;
     double total_scs = 0.0;
     int scs_count = 0;
-    int radius = 5; // Adjust the radius as needed
+    int radius = 5;  // Radius for neighborhood
+
+    // Compute SCS based on neighboring Wasserstein distances
     for (const auto &kv : wasserstein_distances) {
         const Eigen::Vector3i &index = kv.first;
         double ws_distance = kv.second;
+
         // Get neighboring voxel indices
         std::vector<Eigen::Vector3i> neighbors = est_calculator.getNeighborIndices(index, radius);
         std::vector<double> neighbor_ws_distances;
+
         for (const auto &neighbor_index : neighbors) {
             auto it = wasserstein_distances.find(neighbor_index);
             if (it != wasserstein_distances.end()) {
                 neighbor_ws_distances.push_back(it->second);
             }
         }
+
+        // Calculate SCS if neighbors are available
         if (!neighbor_ws_distances.empty()) {
-            double mean_ws = std::accumulate(neighbor_ws_distances.begin(), neighbor_ws_distances.end(), 0.0) /
-                             neighbor_ws_distances.size();
+            double mean_ws_neighbor = std::accumulate(neighbor_ws_distances.begin(), neighbor_ws_distances.end(), 0.0) / neighbor_ws_distances.size();
             double variance_ws = 0.0;
             for (double w : neighbor_ws_distances) {
-                variance_ws += (w - mean_ws) * (w - mean_ws);
+                variance_ws += (w - mean_ws_neighbor) * (w - mean_ws_neighbor);
             }
             variance_ws /= neighbor_ws_distances.size();
             double std_dev_ws = std::sqrt(variance_ws);
-            double scs = std_dev_ws / mean_ws;
+            double scs = std_dev_ws / mean_ws_neighbor;
             total_scs += scs;
             scs_count++;
         }
     }
+
     scs_overall = total_scs / scs_count;
-    t_scs = ticToc.toc();
-    std::cout << "Spatial Consistency Score (SCS): " << scs_overall << std::endl;
+    t_scs = ticToc.toc();  // Timing SCS calculation
+    std::cout << "INFO: Spatial Consistency Score (SCS): " << scs_overall << std::endl;
 }
 
 void MapEval::saveMmeResults() {
     if (param_.evaluate_mme_) {
-        file_mt.lock();
-        file_result << std::fixed << setprecision(5) << "MME: " << mme_est << " " << mme_gt << " "
+        file_mt.lock();  // Lock file access to ensure thread safety
+        file_result << std::fixed << std::setprecision(5) << "MME: " << mme_est << " " << mme_gt << " "
                     << min_abs_entropy << " " << max_abs_entropy << std::endl;
-        file_mt.unlock();
-        std::cout << "MME Results Saved to " << results_file_path << std::endl;
+        file_mt.unlock();  // Unlock file access
 
-        // save cloud
+        std::cout << "INFO: MME results saved to " << results_file_path << std::endl;
+
+        // Save point clouds
         open3d::io::WritePointCloud(results_subfolder + "map_entropy.pcd", *map_3d_entropy);
-        std::cout << "Save rendered entropy map to "
-                  << results_subfolder + "map_entropy.pcd" << std::endl;
+        std::cout << "INFO: Saved rendered entropy map to " << results_subfolder + "map_entropy.pcd" << std::endl;
+
         if (param_.evaluate_gt_mme_) {
             open3d::io::WritePointCloud(results_subfolder + "gt_entropy.pcd", *gt_3d_entropy);
-            std::cout << "Save rendered entropy gt map to " << results_subfolder + "gt_entropy.pcd" << std::endl;
+            std::cout << "INFO: Saved rendered entropy ground truth map to " << results_subfolder + "gt_entropy.pcd" << std::endl;
         }
     }
 }
 
+
 void MapEval::saveRegistrationResults() {
 
-    std::cout << "AC+MME Time: " << t_acc + (t2 - t1) / 1000.0 << std::endl;
-    std::cout << "CD+MME Time: " << t_fcd + (t2 - t1) / 1000.0 << std::endl;
-    std::cout << "AWD+SCS Time: " << t_v / 1000.0 + (t_vmd - t_v) / 1000.0 + (t_scs - t_cdf) / 1000.0 << std::endl;
+    // Log time taken for different stages
+    std::cout << "INFO: AC+MME Time: " << t_acc + (t2 - t1) / 1000.0 << std::endl;
+    std::cout << "INFO: CD+MME Time: " << t_fcd + (t2 - t1) / 1000.0 << std::endl;
+    std::cout << "INFO: AWD+SCS Time: " << t_v / 1000.0 + (t_vmd - t_v) / 1000.0 + (t_scs - t_cdf) / 1000.0 << std::endl;
 
-    // save file results
+    // Save file results
     file_mt.lock();
+    
+    // Log RMSE, Mean, Std, and Compensation results
     file_result << std::fixed << std::setprecision(15) << "RMSE: "
                 << est_gt_results.at(1).transpose() << std::endl;
     file_result << std::fixed << std::setprecision(15) << "Mean: "
@@ -377,66 +408,81 @@ void MapEval::saveRegistrationResults() {
                 << est_gt_results.at(3).transpose() << std::endl;
     file_result << std::fixed << std::setprecision(15) << "Comp: "
                 << est_gt_results.at(2).transpose() << std::endl;
+    
+    // Preserving commented-out lines for future use
     // file_result << std::fixed << setprecision(5) << "CD: " << cd_vec.transpose()
     //             << std::endl;
+    
+    // Log full Chamfer Distance
     file_result << std::fixed << setprecision(5) << "FULL CD: " << full_chamfer_dist << std::endl;
-    // file_result << std::fixed << setprecision(5) << "F1: " << f1_vec.transpose()
+    
+    // Preserving commented-out lines for future use
+    // file_result << std::fixed << std::setprecision(5) << "F1: " << f1_vec.transpose()
     //             << std::endl;
-    // file_result << std::fixed << setprecision(5) << "IOU: " << iou_vec.transpose()
+    // file_result << std::fixed << std::setprecision(5) << "IOU: " << iou_vec.transpose()
     //             << std::endl;
-    file_result << std::fixed << setprecision(5) << "VMD: " << vmd << std::endl;
-    file_result << std::fixed << setprecision(5) << "SCS: " << scs_overall << std::endl;
+    
+    // Log VMD and SCS
+    file_result << std::fixed << std::setprecision(5) << "VMD: " << vmd << std::endl;
+    file_result << std::fixed << std::setprecision(5) << "SCS: " << scs_overall << std::endl;
+
+    // Log timing details for the different stages
     file_result << "Time load-MME-mesh-ICP-Metric-AC-FCD: " << t1 / 1000.0 << " " << (t2 - t1) / 1000.0 << " "
                 << (t3) / 1000.0 << " " << (t4 - t3) / 1000.0 << " "
                 << (t5 - t4) / 1000.0 << " " << t_acc << " " << t_fcd << std::endl;
+    
     file_result << "VMD Time voxelization-WD-CDF-SCS: " << t_v / 1000.0 << " " << (t_vmd - t_v) / 1000.0 << " "
                 << (t_cdf - t_vmd) / 1000.0 << " " << (t_scs - t_cdf) / 1000.0 << std::endl;
+
+    // Additional timing logs
     file_result << "AC+MME Time: " << t_acc + (t2 - t1) / 1000.0 << std::endl;
     file_result << "CD+MME Time: " << t_fcd + (t2 - t1) / 1000.0 << std::endl;
     file_result << "AWD+SCS Time: " << t_v / 1000.0 + (t_vmd - t_v) / 1000.0 + (t_scs - t_cdf) / 1000.0 << std::endl;
 
     file_result.close();
     file_mt.unlock();
-    std::cout << "5.1 Save txt files finished " << results_subfolder + "map_results.txt" << std::endl;
+    std::cout << "INFO: Results saved to " << results_subfolder + "map_results.txt" << std::endl;
 
-    map_3d_render_inlier = renderDistanceOnPointCloud(
-            corresponding_cloud_gt, corresponding_cloud_est, param_.trunc_dist_[0]);
-    map_3d_render_raw =
-            renderDistanceOnPointCloud(gt_3d_, map_3d_, param_.trunc_dist_[0]);
-    open3d::io::WritePointCloud(results_subfolder + "raw_rendered_dis_map.pcd",
-                                *map_3d_render_raw);
-    std::cout << "5.2 Save rendered inlier distance error map to " << results_subfolder + "raw_rendered_dis_map.pcd"
-              << std::endl;
+    // Save rendered distance error maps
+    map_3d_render_inlier = renderDistanceOnPointCloud(corresponding_cloud_gt, corresponding_cloud_est, param_.trunc_dist_[0]);
+    map_3d_render_raw = renderDistanceOnPointCloud(gt_3d_, map_3d_, param_.trunc_dist_[0]);
+
+    // Save the raw and inlier distance maps
+    open3d::io::WritePointCloud(results_subfolder + "raw_rendered_dis_map.pcd", *map_3d_render_raw);
+    std::cout << "INFO: Saved raw distance error map to " << results_subfolder + "raw_rendered_dis_map.pcd" << std::endl;
     open3d::io::WritePointCloud(results_subfolder + "inlier_rendered_dis_map.pcd", *map_3d_render_inlier);
-    std::cout << "5.3 Save rendered raw distance error map to " << results_subfolder + "inlier_rendered_dis_map.pcd"
-              << std::endl;
+    std::cout << "INFO: Saved inlier distance error map to " << results_subfolder + "inlier_rendered_dis_map.pcd" << std::endl;
 
+    // If noisy ground truth is evaluated, save the noisy GT map
     if (param_.evaluate_noised_gt_) {
         open3d::io::WritePointCloud(results_subfolder + "noise_gt_map.pcd", *map_3d_);
-        std::cout << "5.4 Save noise_gt_map to " << results_subfolder + "noise_gt_map.pcd"
-                  << std::endl;
+        std::cout << "INFO: Saved noisy ground truth map to " << results_subfolder + "noise_gt_map.pcd" << std::endl;
     }
 
-    // ToDO: can not save mesh file successfully
+    // Save meshes (if mesh evaluation is enabled)
     if (eva_mesh) {
-        // create corresspondence mesh
-        shared_ptr<Mesh> correspdence_mesh(new Mesh());
-        if (1) {
-            corresponding_cloud_est->EstimateNormals(
-                    geometry::KDTreeSearchParamHybrid(1.0, 30));
-            //correspdence_mesh = createMeshFromPCD(corresponding_cloud_est, 0.6, 11);
-        }
-        // visualization::DrawGeometries({correspdence_mesh}, "correspdence_mesh");
-
-        // TODO : render mesh by distance error
-        std::cout << "render correspondence mesh begin!" << std::endl;
-        // gt mesh only save once
+        // Create correspondence mesh if needed
+        shared_ptr<Mesh> correspondence_mesh(new Mesh());
+        corresponding_cloud_est->EstimateNormals(geometry::KDTreeSearchParamHybrid(1.0, 30));
+        
+        // Optional: render mesh by distance error
+        std::cout << "INFO: Rendering correspondence mesh..." << std::endl;
+        
+        // Save GT and estimated meshes
         open3d::io::WriteTriangleMesh(results_subfolder + "gt_mesh.ply", *gt_mesh);
         open3d::io::WriteTriangleMesh(results_subfolder + "est_mesh.ply", *est_mesh);
-        open3d::io::WriteTriangleMesh(results_subfolder + "correspondence_mesh.ply", *correspdence_mesh);
+        open3d::io::WriteTriangleMesh(results_subfolder + "correspondence_mesh.ply", *correspondence_mesh);
+
+        std::cout << "INFO: Saved meshes to the following paths:" << std::endl;
+        std::cout << "GT Mesh: " << results_subfolder + "gt_mesh.ply" << std::endl;
+        std::cout << "Estimated Mesh: " << results_subfolder + "est_mesh.ply" << std::endl;
+        std::cout << "Correspondence Mesh: " << results_subfolder + "correspondence_mesh.ply" << std::endl;
     }
-    visualization::DrawGeometries({map_3d_render_raw}, "mesh result");
+
+    // Optional: Render the geometry for visualization
+    visualization::DrawGeometries({map_3d_render_raw}, "Mesh Result Visualization");
 }
+
 
 
 template<typename T>
@@ -1045,86 +1091,315 @@ void MapEval::getDiffRegResultWithCorrespondence(
     result.push_back(number_vec);
 }
 
+// void MapEval::calculateMetrics(pipelines::registration::RegistrationResult &registration_result) {
+
+
+//     // Assuming registration_result, map_3d_, gt_3d_, and param_ are available
+//     // Calculate RMSE, mean error, standard deviation, fitness score
+//     // Implement getDiffRegResult to compute these metrics
+//     TicToc ticToc;
+//     vector<double> est_gt_dis(registration_result.correspondence_set_.size(), 0.0);
+//     getDiffRegResult(est_gt_results,
+//                      registration_result.correspondence_set_,
+//                      *map_3d_, *gt_3d_, *corresponding_cloud_est, *corresponding_cloud_gt);
+//     std::cout << "5. calculate est-gt metrics : " << ticToc.toc() / 1000.0 << " [s]"
+//               << std::endl;
+//     t_acc = ticToc.toc() / 1000.0;
+
+//     //getDiffRegResult(est_gt_results, registration_result.correspondence_set_, *map_3d_, *gt_3d_);
+//     std::cout << "RMSE: " << est_gt_results.at(1).transpose() << std::endl;
+//     std::cout << "Mean error: " << est_gt_results.at(0).transpose() << std::endl;
+//     std::cout << "Standard deviation: " << est_gt_results.at(3).transpose() << std::endl;
+//     std::cout << "Fitness: " << est_gt_results.at(2).transpose() << std::endl;
+//     // F1 Score and Chamfer Distance
+//     f1_vec = Vector5d::Zero();
+//     auto gt_est_icp_results = pipelines::registration::EvaluateRegistration(*gt_3d_, *map_3d_,
+//                                                                             param_.icp_max_distance_);
+//     getDiffRegResult(gt_est_results, gt_est_icp_results.correspondence_set_, *gt_3d_, *map_3d_);
+//     cd_vec = est_gt_results.at(1) + gt_est_results.at(1);  // Chamfer Distance
+//     iou_vec = Vector5d::Zero();
+
+// //    for (int i = 0; i < param_.trunc_dist_.size(); ++i) {
+// //        double pr = 2 * est_gt_results.at(2)[i] * gt_est_results.at(2)[i];
+// //        double p_plus_r = est_gt_results.at(2)[i] + gt_est_results.at(2)[i];
+// //        f1_vec[i] = pr / p_plus_r;  // F1 Score
+// //    }
+
+//     // Calculate IoU
+// //    iou_vec = Vector5d::Zero();
+// //    for (int i = 0; i < param_.trunc_dist_.size(); ++i) {
+// //        int num_intersection = est_gt_results.at(4)[i];
+// ////        int num_intersection = 0;
+// ////        for (size_t j = 0; j < registration_result.correspondence_set_.size(); ++j) {
+// ////            if (est_gt_dis[j] <= param_.trunc_dist_[i]) {
+// ////                num_intersection++;
+// ////            }
+// ////        }
+// //        int num_union = map_3d_->points_.size() + gt_3d_->points_.size() - num_intersection;
+// //        iou_vec[i] = static_cast<double>(num_intersection) / num_union;
+// //    }
+
+//     // F1 Score and Chamfer Distance
+//     for (int i = 0; i < param_.trunc_dist_.size(); ++i) {
+//         double overlap_ratio = est_gt_results.at(2)[i];
+//         double rmse = est_gt_results.at(1)[i];
+//         f1_vec[i] = 2 * overlap_ratio * rmse / (overlap_ratio + rmse);  // F1 Score
+//         int num_intersection = est_gt_results.at(4)[i];
+//         int num_union = map_3d_->points_.size() + gt_3d_->points_.size() - num_intersection;
+//         iou_vec[i] = static_cast<double>(num_intersection) / num_union;
+//     }
+
+//     // std::cout << "Chamfer Distance: " << cd_vec.transpose() << std::endl;
+//     // std::cout << "F1 Score: " << f1_vec.transpose() << std::endl;
+//     std::cout << "MME: " << mme_est << " " << mme_gt << std::endl;
+//     // std::cout << "IoU: " << iou_vec.transpose() << std::endl;
+
+//     //计算并打印原始点云的chamfer distance
+//     TicToc ticToc1;
+//     full_chamfer_dist = computeChamferDistance(*map_3d_, *gt_3d_);
+//     t_fcd = ticToc1.toc() / 1000.0;
+//     std::cout << "Full point cloud Chamfer distance: " << full_chamfer_dist << std::endl;
+//     std::cout << "5. calculate full cd metrics : " << t_fcd << " [s]" << std::endl;
+// }
+
+// void MapEval::calculateMetricsWithInitialMatrix() {
+//     // 使用初始矩阵将map_3d_变换到gt_3d_的坐标系下
+//     *map_3d_ = map_3d_->Transform(param_.initial_matrix_);
+//     // 手动计算对应点
+//     // 种方式假设给定的初始矩阵已经足够精确,可以直接用于计算map metric。如果初始矩阵存在较大误差,计算出的指标可能不够准确。
+//     pipelines::registration::CorrespondenceSet est_gt_correspondence;
+//     pipelines::registration::CorrespondenceSet gt_est_correspondence;
+
+//     // 计算est_gt_correspondence
+//     open3d::geometry::KDTreeFlann kdtree_gt;
+//     kdtree_gt.SetGeometry(*gt_3d_);
+//     for (size_t i = 0; i < map_3d_->points_.size(); ++i) {
+//         std::vector<int> indices(1);
+//         std::vector<double> distances(1);
+//         if (kdtree_gt.SearchKNN(map_3d_->points_[i], 1, indices, distances) > 0) {
+//             if (distances[0] <= param_.icp_max_distance_) {
+//                 est_gt_correspondence.push_back(Eigen::Vector2i(i, indices[0]));
+//             }
+//         }
+//     }
+//     // 计算gt_est_correspondence
+//     open3d::geometry::KDTreeFlann kdtree_est;
+//     kdtree_est.SetGeometry(*map_3d_);
+//     for (size_t i = 0; i < gt_3d_->points_.size(); ++i) {
+//         std::vector<int> indices(1);
+//         std::vector<double> distances(1);
+//         if (kdtree_est.SearchKNN(gt_3d_->points_[i], 1, indices, distances) > 0) {
+//             if (distances[0] <= param_.icp_max_distance_) {
+//                 gt_est_correspondence.push_back(Eigen::Vector2i(indices[0], i));
+//             }
+//         }
+//     }
+//     // 计算est_gt_results
+//     //    getDiffRegResult(est_gt_results, est_gt_correspondence, *map_3d_, *gt_3d_, *corresponding_cloud_est, *corresponding_cloud_gt);
+//     //    // 计算gt_est_results
+//     //    getDiffRegResult(gt_est_results, gt_est_correspondence, *gt_3d_, *map_3d_);
+
+//     // 计算est_gt_results
+//     getDiffRegResultWithCorrespondence(est_gt_results, est_gt_correspondence, *map_3d_, *gt_3d_,
+//                                        *corresponding_cloud_est, *corresponding_cloud_gt);
+//     // 计算gt_est_results
+//     getDiffRegResultWithCorrespondence(gt_est_results, gt_est_correspondence, *gt_3d_, *map_3d_,
+//                                        *corresponding_cloud_est, *corresponding_cloud_gt);
+
+
+
+//     // 计算Chamfer Distance、F1 Score和IoU
+//     cd_vec = est_gt_results.at(1) + gt_est_results.at(1);
+//     for (int i = 0; i < param_.trunc_dist_.size(); ++i) {
+//         double overlap_ratio = est_gt_results.at(2)[i];
+//         double rmse = est_gt_results.at(1)[i];
+//         f1_vec[i] = 2 * overlap_ratio * rmse / (overlap_ratio + rmse);
+//         int num_intersection = est_gt_results.at(4)[i];
+//         int num_union = map_3d_->points_.size() + gt_3d_->points_.size() - num_intersection;
+//         iou_vec[i] = static_cast<double>(num_intersection) / num_union;
+//     }
+//     // 输出结果
+//     std::cout << "Chamfer Distance: " << cd_vec.transpose() << std::endl;
+//     // std::cout << "F1 Score: " << f1_vec.transpose() << std::endl;
+//     std::cout << "est-gt MME: " << mme_est << " " << mme_gt << std::endl;
+//     // std::cout << "IoU: " << iou_vec.transpose() << std::endl;
+// }
+
+
+// void MapEval::saveResults() {
+
+//     // 根据pcd_file_name确定子文件夹名称
+//     std::string subfolder;
+//     if (param_.pcd_file_name_ == "map.pcd") {
+//         subfolder = "map_results/";
+//     } else if (param_.pcd_file_name_ == "final_map_lidar.pcd") {
+//         subfolder = "final_map_lidar_results/";
+//     } else {
+//         std::cerr << "Invalid PCD file name: " << param_.pcd_file_name_ << std::endl;
+//     }
+
+//     // 创建子文件夹(如果不存在)
+//     std::string results_subfolder = param_.evaluation_map_pcd_path_ + subfolder;
+//     std::cout << "Save results in " << results_subfolder << std::endl;
+//     if (!fs::exists(results_subfolder)) {
+//         fs::create_directory(results_subfolder);
+//     }
+// // 将评估结果保存到对应的子文件夹中
+//     std::string results_file_path = results_subfolder + "map_results.txt";
+//     std::ofstream file_result(results_file_path, std::ios::app);
+
+//     // Save evaluation results to a file
+//     //    std::string result_file_path = param_.evaluation_map_pcd_path_ + "eval_result.txt";
+//     //    std::ofstream file_result(result_file_path.c_str(), std::ios::app);
+//     // Assuming that est_gt_results and other necessary data are available
+//     // Save point clouds or meshes if required
+
+
+//     // Get current time
+//     auto now = std::chrono::system_clock::now();
+//     std::time_t now_c = std::chrono::system_clock::to_time_t(now);
+//     // Format the time as a string (you can adjust the format as needed)
+//     std::stringstream time_stream;
+//     time_stream << std::put_time(std::localtime(&now_c), "%Y-%m-%d %X"); // Example format: YYYY-MM-DD HH:MM:SS
+//     // Output name and current time to the file
+//     file_result << param_.name_ << " " << time_stream.str() << std::endl;
+//     file_result << param_.map_gt_path_ << std::endl;
+//     file_result << param_.evaluation_map_pcd_path_ + param_.pcd_file_name_ << std::endl;
+//     file_result << std::fixed << std::setprecision(15) << "Inlier RMSE: "
+//                 << est_gt_results.at(1).transpose() << std::endl;
+//     file_result << std::fixed << std::setprecision(15) << "Inlier Mean: "
+//                 << est_gt_results.at(0).transpose() << std::endl;
+//     file_result << std::fixed << std::setprecision(15) << "Inlier Standard deviation: "
+//                 << est_gt_results.at(3).transpose() << std::endl;
+//     file_result << std::fixed << std::setprecision(15) << "Inlier Completeness: "
+//                 << est_gt_results.at(2).transpose() << std::endl;
+//     file_result << std::fixed << setprecision(5) << "CD: " << cd_vec.transpose()
+//                 << std::endl;
+//     // file_result << std::fixed << setprecision(5) << "F1: " << f1_vec.transpose()
+//     //             << std::endl;
+//     // file_result << std::fixed << setprecision(5) << "IOU: " << iou_vec.transpose()
+//     //             << std::endl;
+
+//     if (param_.evaluate_mme_) {
+//         file_result << std::fixed << setprecision(5) << "MME: " << mme_est << " " << mme_gt << " "
+//                     << min_abs_entropy << " " << max_abs_entropy << std::endl;
+//     }
+//     file_result << "Time: " << t1 / 1000.0 << " " << (t2 - t1) / 1000.0 << " "
+//                 << (t3 - t2) / 1000.0 << " " << (t4 - t3) / 1000.0 << " "
+//                 << (t5 - t4) / 1000.0 << " " << (t7 - t5) / 1000.0 << std::endl;
+//     file_result.close();
+//     std::cout << "Results saved to " << results_file_path << std::endl;
+
+//     // rendering distance map
+//     map_3d_render_inlier = renderDistanceOnPointCloud(
+//             corresponding_cloud_gt, corresponding_cloud_est, param_.trunc_dist_[0]);
+//     map_3d_render_raw =
+//             renderDistanceOnPointCloud(gt_3d_, map_3d_, param_.trunc_dist_[0]);
+//     //    visualization::DrawGeometries({map_3d_render_inlier}, "mesh result");
+
+//     open3d::io::WritePointCloud(results_subfolder + "raw_rendered_dis_map.pcd",
+//                                 *map_3d_render_raw);
+//     std::cout << "Save rendered inlier distance error map to " << results_subfolder + "raw_rendered_dis_map.pcd"
+//               << std::endl;
+//     open3d::io::WritePointCloud(results_subfolder + "inlier_rendered_dis_map.pcd", *map_3d_render_inlier);
+//     std::cout << "Save rendered raw distance error map to " << results_subfolder + "inlier_rendered_dis_map.pcd"
+//               << std::endl;
+
+
+//     if (param_.evaluate_mme_) {
+//         open3d::io::WritePointCloud(results_subfolder + "map_entropy.pcd", *map_3d_entropy);
+//         std::cout << "Save rendered entropy map to "
+//                   << results_subfolder + "map_entropy.pcd" << std::endl;
+//         if (param_.evaluate_gt_mme_) {
+//             open3d::io::WritePointCloud(results_subfolder + "gt_entropy.pcd", *gt_3d_entropy);
+//             std::cout << "Save rendered entropy gt map to " << results_subfolder + "gt_entropy.pcd" << std::endl;
+//             visualization::DrawGeometries({gt_3d_entropy}, "entropy result");
+//         }
+// //        visualization::DrawGeometries({map_3d_entropy}, "entropy result");
+//     }
+//     // std::cout << "Results saved to " << result_file_path << std::endl;
+
+//     // ToDO: can not save mesh file successfully
+//     if (eva_mesh) {
+//         // create corresspondence mesh
+//         shared_ptr<Mesh> correspdence_mesh(new Mesh());
+//         if (1) {
+//             corresponding_cloud_est->EstimateNormals(
+//                     geometry::KDTreeSearchParamHybrid(1.0, 30));
+//             //correspdence_mesh = createMeshFromPCD(corresponding_cloud_est, 0.6, 11);
+//         }
+//         // visualization::DrawGeometries({correspdence_mesh}, "correspdence_mesh");
+
+//         // TODO : render mesh by distance error
+//         std::cout << "render correspondence mesh begin!" << std::endl;
+//         // gt mesh only save once
+//         open3d::io::WriteTriangleMesh(results_subfolder + "gt_mesh.ply", *gt_mesh);
+//         open3d::io::WriteTriangleMesh(results_subfolder + "est_mesh.ply", *est_mesh);
+//         open3d::io::WriteTriangleMesh(results_subfolder + "correspondence_mesh.ply", *correspdence_mesh);
+//     }
+//     // visualization::DrawGeometries({map_3d_render_raw}, "mesh result");
+// }
+
 void MapEval::calculateMetrics(pipelines::registration::RegistrationResult &registration_result) {
-
-
-    // Assuming registration_result, map_3d_, gt_3d_, and param_ are available
-    // Calculate RMSE, mean error, standard deviation, fitness score
-    // Implement getDiffRegResult to compute these metrics
     TicToc ticToc;
+
+    // Calculate the distances between the estimated and ground truth point clouds
     vector<double> est_gt_dis(registration_result.correspondence_set_.size(), 0.0);
     getDiffRegResult(est_gt_results,
                      registration_result.correspondence_set_,
                      *map_3d_, *gt_3d_, *corresponding_cloud_est, *corresponding_cloud_gt);
-    std::cout << "5. calculate est-gt metrics : " << ticToc.toc() / 1000.0 << " [s]"
-              << std::endl;
+
+    std::cout << "INFO: Calculating est-gt metrics took: " << ticToc.toc() / 1000.0 << " [s]" << std::endl;
     t_acc = ticToc.toc() / 1000.0;
 
-    //getDiffRegResult(est_gt_results, registration_result.correspondence_set_, *map_3d_, *gt_3d_);
-    std::cout << "RMSE: " << est_gt_results.at(1).transpose() << std::endl;
-    std::cout << "Mean error: " << est_gt_results.at(0).transpose() << std::endl;
-    std::cout << "Standard deviation: " << est_gt_results.at(3).transpose() << std::endl;
-    std::cout << "Fitness: " << est_gt_results.at(2).transpose() << std::endl;
+    // Log calculated metrics: RMSE, Mean, Standard deviation, Fitness score
+    std::cout << "INFO: RMSE: " << est_gt_results.at(1).transpose() << std::endl;
+    std::cout << "INFO: Mean error: " << est_gt_results.at(0).transpose() << std::endl;
+    std::cout << "INFO: Standard deviation: " << est_gt_results.at(3).transpose() << std::endl;
+    std::cout << "INFO: Fitness: " << est_gt_results.at(2).transpose() << std::endl;
+
     // F1 Score and Chamfer Distance
     f1_vec = Vector5d::Zero();
-    auto gt_est_icp_results = pipelines::registration::EvaluateRegistration(*gt_3d_, *map_3d_,
-                                                                            param_.icp_max_distance_);
+    auto gt_est_icp_results = pipelines::registration::EvaluateRegistration(*gt_3d_, *map_3d_, param_.icp_max_distance_);
     getDiffRegResult(gt_est_results, gt_est_icp_results.correspondence_set_, *gt_3d_, *map_3d_);
     cd_vec = est_gt_results.at(1) + gt_est_results.at(1);  // Chamfer Distance
     iou_vec = Vector5d::Zero();
 
-//    for (int i = 0; i < param_.trunc_dist_.size(); ++i) {
-//        double pr = 2 * est_gt_results.at(2)[i] * gt_est_results.at(2)[i];
-//        double p_plus_r = est_gt_results.at(2)[i] + gt_est_results.at(2)[i];
-//        f1_vec[i] = pr / p_plus_r;  // F1 Score
-//    }
+    // F1 Score and IoU calculation (commented-out for future use)
+    // for (int i = 0; i < param_.trunc_dist_.size(); ++i) {
+    //     double pr = 2 * est_gt_results.at(2)[i] * gt_est_results.at(2)[i];
+    //     double p_plus_r = est_gt_results.at(2)[i] + gt_est_results.at(2)[i];
+    //     f1_vec[i] = pr / p_plus_r;  // F1 Score
+    // }
 
-    // Calculate IoU
-//    iou_vec = Vector5d::Zero();
-//    for (int i = 0; i < param_.trunc_dist_.size(); ++i) {
-//        int num_intersection = est_gt_results.at(4)[i];
-////        int num_intersection = 0;
-////        for (size_t j = 0; j < registration_result.correspondence_set_.size(); ++j) {
-////            if (est_gt_dis[j] <= param_.trunc_dist_[i]) {
-////                num_intersection++;
-////            }
-////        }
-//        int num_union = map_3d_->points_.size() + gt_3d_->points_.size() - num_intersection;
-//        iou_vec[i] = static_cast<double>(num_intersection) / num_union;
-//    }
+    // Calculate IoU (commented-out for future use)
+    // iou_vec = Vector5d::Zero();
+    // for (int i = 0; i < param_.trunc_dist_.size(); ++i) {
+    //     int num_intersection = est_gt_results.at(4)[i];
+    //     int num_union = map_3d_->points_.size() + gt_3d_->points_.size() - num_intersection;
+    //     iou_vec[i] = static_cast<double>(num_intersection) / num_union;
+    // }
 
-    // F1 Score and Chamfer Distance
-    for (int i = 0; i < param_.trunc_dist_.size(); ++i) {
-        double overlap_ratio = est_gt_results.at(2)[i];
-        double rmse = est_gt_results.at(1)[i];
-        f1_vec[i] = 2 * overlap_ratio * rmse / (overlap_ratio + rmse);  // F1 Score
-        int num_intersection = est_gt_results.at(4)[i];
-        int num_union = map_3d_->points_.size() + gt_3d_->points_.size() - num_intersection;
-        iou_vec[i] = static_cast<double>(num_intersection) / num_union;
-    }
+    // Log calculated metrics
+    std::cout << "INFO: MME: " << mme_est << " " << mme_gt << std::endl;
 
-    // std::cout << "Chamfer Distance: " << cd_vec.transpose() << std::endl;
-    // std::cout << "F1 Score: " << f1_vec.transpose() << std::endl;
-    std::cout << "MME: " << mme_est << " " << mme_gt << std::endl;
-    // std::cout << "IoU: " << iou_vec.transpose() << std::endl;
-
-    //计算并打印原始点云的chamfer distance
+    // Calculate and print Chamfer distance
     TicToc ticToc1;
     full_chamfer_dist = computeChamferDistance(*map_3d_, *gt_3d_);
     t_fcd = ticToc1.toc() / 1000.0;
-    std::cout << "Full point cloud Chamfer distance: " << full_chamfer_dist << std::endl;
-    std::cout << "5. calculate full cd metrics : " << t_fcd << " [s]" << std::endl;
+    std::cout << "INFO: Full point cloud Chamfer distance: " << full_chamfer_dist << std::endl;
+    std::cout << "INFO: Chamfer distance calculation took: " << t_fcd << " [s]" << std::endl;
 }
 
 void MapEval::calculateMetricsWithInitialMatrix() {
-    // 使用初始矩阵将map_3d_变换到gt_3d_的坐标系下
+    // Apply initial matrix transformation to map_3d_
     *map_3d_ = map_3d_->Transform(param_.initial_matrix_);
-    // 手动计算对应点
-    // 种方式假设给定的初始矩阵已经足够精确,可以直接用于计算map metric。如果初始矩阵存在较大误差,计算出的指标可能不够准确。
+
+    // Calculate correspondences using KD-tree for efficiency
     pipelines::registration::CorrespondenceSet est_gt_correspondence;
     pipelines::registration::CorrespondenceSet gt_est_correspondence;
 
-    // 计算est_gt_correspondence
+    // Calculate est_gt_correspondence (ground truth -> estimated)
     open3d::geometry::KDTreeFlann kdtree_gt;
     kdtree_gt.SetGeometry(*gt_3d_);
     for (size_t i = 0; i < map_3d_->points_.size(); ++i) {
@@ -1136,7 +1411,8 @@ void MapEval::calculateMetricsWithInitialMatrix() {
             }
         }
     }
-    // 计算gt_est_correspondence
+
+    // Calculate gt_est_correspondence (estimated -> ground truth)
     open3d::geometry::KDTreeFlann kdtree_est;
     kdtree_est.SetGeometry(*map_3d_);
     for (size_t i = 0; i < gt_3d_->points_.size(); ++i) {
@@ -1148,21 +1424,14 @@ void MapEval::calculateMetricsWithInitialMatrix() {
             }
         }
     }
-    // 计算est_gt_results
-    //    getDiffRegResult(est_gt_results, est_gt_correspondence, *map_3d_, *gt_3d_, *corresponding_cloud_est, *corresponding_cloud_gt);
-    //    // 计算gt_est_results
-    //    getDiffRegResult(gt_est_results, gt_est_correspondence, *gt_3d_, *map_3d_);
 
-    // 计算est_gt_results
+    // Calculate the metrics (est_gt_results and gt_est_results)
     getDiffRegResultWithCorrespondence(est_gt_results, est_gt_correspondence, *map_3d_, *gt_3d_,
                                        *corresponding_cloud_est, *corresponding_cloud_gt);
-    // 计算gt_est_results
     getDiffRegResultWithCorrespondence(gt_est_results, gt_est_correspondence, *gt_3d_, *map_3d_,
                                        *corresponding_cloud_est, *corresponding_cloud_gt);
 
-
-
-    // 计算Chamfer Distance、F1 Score和IoU
+    // Calculate Chamfer Distance, F1 Score, and IoU (for initial matrix)
     cd_vec = est_gt_results.at(1) + gt_est_results.at(1);
     for (int i = 0; i < param_.trunc_dist_.size(); ++i) {
         double overlap_ratio = est_gt_results.at(2)[i];
@@ -1172,53 +1441,47 @@ void MapEval::calculateMetricsWithInitialMatrix() {
         int num_union = map_3d_->points_.size() + gt_3d_->points_.size() - num_intersection;
         iou_vec[i] = static_cast<double>(num_intersection) / num_union;
     }
-    // 输出结果
-    std::cout << "Chamfer Distance: " << cd_vec.transpose() << std::endl;
-    // std::cout << "F1 Score: " << f1_vec.transpose() << std::endl;
-    std::cout << "est-gt MME: " << mme_est << " " << mme_gt << std::endl;
-    // std::cout << "IoU: " << iou_vec.transpose() << std::endl;
+
+    // Log the results
+    std::cout << "INFO: Chamfer Distance: " << cd_vec.transpose() << std::endl;
+    std::cout << "INFO: F1 Score: " << f1_vec.transpose() << std::endl;
+    std::cout << "INFO: est-gt MME: " << mme_est << " " << mme_gt << std::endl;
+    std::cout << "INFO: IoU: " << iou_vec.transpose() << std::endl;
 }
 
-
 void MapEval::saveResults() {
-
-    // 根据pcd_file_name确定子文件夹名称
+    // Create results subfolder based on the PCD file name
     std::string subfolder;
     if (param_.pcd_file_name_ == "map.pcd") {
         subfolder = "map_results/";
     } else if (param_.pcd_file_name_ == "final_map_lidar.pcd") {
         subfolder = "final_map_lidar_results/";
     } else {
-        std::cerr << "Invalid PCD file name: " << param_.pcd_file_name_ << std::endl;
+        std::cerr << "ERROR: Invalid PCD file name: " << param_.pcd_file_name_ << std::endl;
+        return;  // Exit if the file name is invalid
     }
 
-    // 创建子文件夹(如果不存在)
+    // Create subfolder if it doesn't exist
     std::string results_subfolder = param_.evaluation_map_pcd_path_ + subfolder;
-    std::cout << "Save results in " << results_subfolder << std::endl;
+    std::cout << "INFO: Saving results in " << results_subfolder << std::endl;
     if (!fs::exists(results_subfolder)) {
         fs::create_directory(results_subfolder);
     }
-// 将评估结果保存到对应的子文件夹中
+
+    // Open result file for appending
     std::string results_file_path = results_subfolder + "map_results.txt";
     std::ofstream file_result(results_file_path, std::ios::app);
 
-    // Save evaluation results to a file
-    //    std::string result_file_path = param_.evaluation_map_pcd_path_ + "eval_result.txt";
-    //    std::ofstream file_result(result_file_path.c_str(), std::ios::app);
-    // Assuming that est_gt_results and other necessary data are available
-    // Save point clouds or meshes if required
-
-
-    // Get current time
+    // Write current time and results to file
     auto now = std::chrono::system_clock::now();
     std::time_t now_c = std::chrono::system_clock::to_time_t(now);
-    // Format the time as a string (you can adjust the format as needed)
     std::stringstream time_stream;
-    time_stream << std::put_time(std::localtime(&now_c), "%Y-%m-%d %X"); // Example format: YYYY-MM-DD HH:MM:SS
-    // Output name and current time to the file
+    time_stream << std::put_time(std::localtime(&now_c), "%Y-%m-%d %X");
     file_result << param_.name_ << " " << time_stream.str() << std::endl;
     file_result << param_.map_gt_path_ << std::endl;
     file_result << param_.evaluation_map_pcd_path_ + param_.pcd_file_name_ << std::endl;
+
+    // Save metrics results
     file_result << std::fixed << std::setprecision(15) << "Inlier RMSE: "
                 << est_gt_results.at(1).transpose() << std::endl;
     file_result << std::fixed << std::setprecision(15) << "Inlier Mean: "
@@ -1227,72 +1490,56 @@ void MapEval::saveResults() {
                 << est_gt_results.at(3).transpose() << std::endl;
     file_result << std::fixed << std::setprecision(15) << "Inlier Completeness: "
                 << est_gt_results.at(2).transpose() << std::endl;
-    file_result << std::fixed << setprecision(5) << "CD: " << cd_vec.transpose()
-                << std::endl;
-    // file_result << std::fixed << setprecision(5) << "F1: " << f1_vec.transpose()
-    //             << std::endl;
-    // file_result << std::fixed << setprecision(5) << "IOU: " << iou_vec.transpose()
-    //             << std::endl;
+    file_result << std::fixed << setprecision(5) << "CD: " << cd_vec.transpose() << std::endl;
+    
+    // Preserving commented-out lines for future use
+    // file_result << std::fixed << setprecision(5) << "F1: " << f1_vec.transpose() << std::endl;
+    // file_result << std::fixed << setprecision(5) << "IOU: " << iou_vec.transpose() << std::endl;
 
     if (param_.evaluate_mme_) {
         file_result << std::fixed << setprecision(5) << "MME: " << mme_est << " " << mme_gt << " "
                     << min_abs_entropy << " " << max_abs_entropy << std::endl;
     }
+
+    // Log time taken for each stage
     file_result << "Time: " << t1 / 1000.0 << " " << (t2 - t1) / 1000.0 << " "
                 << (t3 - t2) / 1000.0 << " " << (t4 - t3) / 1000.0 << " "
                 << (t5 - t4) / 1000.0 << " " << (t7 - t5) / 1000.0 << std::endl;
     file_result.close();
-    std::cout << "Results saved to " << results_file_path << std::endl;
+    std::cout << "INFO: Results saved to " << results_file_path << std::endl;
 
-    // rendering distance map
-    map_3d_render_inlier = renderDistanceOnPointCloud(
-            corresponding_cloud_gt, corresponding_cloud_est, param_.trunc_dist_[0]);
-    map_3d_render_raw =
-            renderDistanceOnPointCloud(gt_3d_, map_3d_, param_.trunc_dist_[0]);
-    //    visualization::DrawGeometries({map_3d_render_inlier}, "mesh result");
-
-    open3d::io::WritePointCloud(results_subfolder + "raw_rendered_dis_map.pcd",
-                                *map_3d_render_raw);
-    std::cout << "Save rendered inlier distance error map to " << results_subfolder + "raw_rendered_dis_map.pcd"
-              << std::endl;
+    // Save rendered distance maps
+    map_3d_render_inlier = renderDistanceOnPointCloud(corresponding_cloud_gt, corresponding_cloud_est, param_.trunc_dist_[0]);
+    map_3d_render_raw = renderDistanceOnPointCloud(gt_3d_, map_3d_, param_.trunc_dist_[0]);
+    open3d::io::WritePointCloud(results_subfolder + "raw_rendered_dis_map.pcd", *map_3d_render_raw);
+    std::cout << "INFO: Saved rendered inlier distance error map to " << results_subfolder + "raw_rendered_dis_map.pcd" << std::endl;
     open3d::io::WritePointCloud(results_subfolder + "inlier_rendered_dis_map.pcd", *map_3d_render_inlier);
-    std::cout << "Save rendered raw distance error map to " << results_subfolder + "inlier_rendered_dis_map.pcd"
-              << std::endl;
+    std::cout << "INFO: Saved rendered raw distance error map to " << results_subfolder + "inlier_rendered_dis_map.pcd" << std::endl;
 
-
+    // Save meshes and entropy maps if required
     if (param_.evaluate_mme_) {
         open3d::io::WritePointCloud(results_subfolder + "map_entropy.pcd", *map_3d_entropy);
-        std::cout << "Save rendered entropy map to "
-                  << results_subfolder + "map_entropy.pcd" << std::endl;
+        std::cout << "INFO: Saved rendered entropy map to " << results_subfolder + "map_entropy.pcd" << std::endl;
         if (param_.evaluate_gt_mme_) {
             open3d::io::WritePointCloud(results_subfolder + "gt_entropy.pcd", *gt_3d_entropy);
-            std::cout << "Save rendered entropy gt map to " << results_subfolder + "gt_entropy.pcd" << std::endl;
+            std::cout << "INFO: Saved rendered entropy ground truth map to " << results_subfolder + "gt_entropy.pcd" << std::endl;
             visualization::DrawGeometries({gt_3d_entropy}, "entropy result");
         }
-//        visualization::DrawGeometries({map_3d_entropy}, "entropy result");
     }
-    // std::cout << "Results saved to " << result_file_path << std::endl;
 
-    // ToDO: can not save mesh file successfully
+    // Mesh saving code (for future use)
     if (eva_mesh) {
-        // create corresspondence mesh
-        shared_ptr<Mesh> correspdence_mesh(new Mesh());
-        if (1) {
-            corresponding_cloud_est->EstimateNormals(
-                    geometry::KDTreeSearchParamHybrid(1.0, 30));
-            //correspdence_mesh = createMeshFromPCD(corresponding_cloud_est, 0.6, 11);
-        }
-        // visualization::DrawGeometries({correspdence_mesh}, "correspdence_mesh");
-
-        // TODO : render mesh by distance error
-        std::cout << "render correspondence mesh begin!" << std::endl;
-        // gt mesh only save once
+        shared_ptr<Mesh> correspondence_mesh(new Mesh());
+        corresponding_cloud_est->EstimateNormals(geometry::KDTreeSearchParamHybrid(1.0, 30));
+        std::cout << "INFO: Rendering correspondence mesh..." << std::endl;
         open3d::io::WriteTriangleMesh(results_subfolder + "gt_mesh.ply", *gt_mesh);
         open3d::io::WriteTriangleMesh(results_subfolder + "est_mesh.ply", *est_mesh);
-        open3d::io::WriteTriangleMesh(results_subfolder + "correspondence_mesh.ply", *correspdence_mesh);
+        open3d::io::WriteTriangleMesh(results_subfolder + "correspondence_mesh.ply", *correspondence_mesh);
     }
-    // visualization::DrawGeometries({map_3d_render_raw}, "mesh result");
+
+    visualization::DrawGeometries({map_3d_render_raw}, "mesh result");
 }
+
 
 pipelines::registration::RegistrationResult MapEval::performICPRegistration() {
     pipelines::registration::RegistrationResult registration_result;
@@ -1369,6 +1616,7 @@ double MapEval::ComputeEntropy(const Eigen::Matrix3d &covariance) {
 double
 MapEval::ComputeMeanMapEntropy(const std::shared_ptr<open3d::geometry::PointCloud> &pointcloud,
                                    std::vector<double> &entropies, double radius) {
+    // need a parallel version
     mean_entropy = 0.0;
     valid_points = 0;
     entropies = std::vector<double>(pointcloud->points_.size(), 0.0);
