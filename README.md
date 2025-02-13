@@ -27,7 +27,7 @@ These complementary aspects require different evaluation approaches, as global d
 
 ## News
 
-- **2025/02/12**: Codes released, but still need to fix some bugs! 
+- **2025/02/12**: Codes released! 
 - **2025/02/05**: Resubmit.
 - **2024/12/19**: Submitted to IEEE RAL. When the paper accepted, **the new version of codes** will release! 
 
@@ -46,6 +46,7 @@ These complementary aspects require different evaluation approaches, as global d
 - **Spatial Consistency Score** (SCS): Enhanced local consistency evaluation
 
 <div align="center">
+
 ![image-20241129091604653](./README/image-20241129091604653.png)
 </div>
 
