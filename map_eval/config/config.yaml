@@ -1,5 +1,4 @@
-
-# registration methods: 0-point-to-point icp; 1-point-to-plane icp; 2-GICP
+# registration methods from Open3D: 0-point-to-point icp; 1-point-to-plane icp; 2-GICP
 registration_methods: 2
 # set icp_max_distance when search the nearest point, larger value will make the search slower
 icp_max_distance: 1.0
@@ -10,6 +9,7 @@ accuracy_level: [0.2, 0.1, 0.08, 0.05, 0.01]
 
 # initial_matrix, vector16d, the initial matrix of the registration
 # make sure the format is correct, or you will got the error log: YAML::BadSubscript' what():  operator[] call on a scalar
+# if you evaluate the LIO mapping result, you can use the CloudCompare to get the initial matrix first
 initial_matrix:
   - [1.0, 0.0, 0.0, 0.0]
   - [0.0, 1.0, 0.0, 0.0]
@@ -25,7 +25,7 @@ estimate_map_path: /home/xchu/data/ltloc_result/parkinglot_raw_3_0.5/
 gt_map_path: /media/xchu/e81eaf80-d92c-413a-a503-1c9b35b19963/home/xchu/data/evaluation/est_file/redbird_02/hkustgz_gt_filter.pcd
 
 
-# scene name
+# scene name, not important, just for batch processing for a series of scenes
 scene_name: redbird_02
 
 # other settings
@@ -40,10 +40,12 @@ evaluate_mme: false
 # if we have ground truth map, we also want to evaluate the MME of the ground truth map
 evaluate_gt_mme: false
 
-# NN search radius for MME calculation (m)
+# NN search radius for MME calculation (m), larger value will make the search much more slower, even the memory overflow
 nn_radius: 0.1
 
 # if we want to evaluate the registration result using initial matrix without alignments, this operation will save time
+# that means your estimate map is already aligned with the ground truth map, 
+# or your estimate map and the ground truth map is already in the same coordinate system
 # e.g. the estimate map is already aligned with the ground truth map
 evaluate_using_initial: false
 

@@ -36,7 +36,7 @@ These complementary aspects require different evaluation approaches, as global d
 **Traditional Metrics Implementation**:
 
 - **Accuracy** (AC): Point-level geometric error assessment
-- **Completeness** (COM): Map coverage evaluation
+- **Completeness** (COM): Map coverage evaluation.
 - **Chamfer Distance** (CD): Bidirectional point cloud difference
 - **Mean Map Entropy** (MME): Information-theoretic local consistency metric
 

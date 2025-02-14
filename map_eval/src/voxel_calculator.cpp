@@ -4,16 +4,6 @@ VoxelCalculator::VoxelCalculator(double voxel_size) {
     voxel_size_ = voxel_size;
 }
 
-double VoxelCalculator::computeInformationGain(const PCLPointCloud::Ptr &frame, const Eigen::Isometry3d &pose) {
-    pcl::PointCloud<pcl::PointXYZI>::Ptr transformed_frame(new pcl::PointCloud<pcl::PointXYZI>());
-    pcl::transformPointCloud(*frame, *transformed_frame, pose.matrix().cast<double>());
-
-    double before_entropy = total_entropy_;
-    updateVoxelMap(transformed_frame);
-    double after_entropy = total_entropy_;
-    return before_entropy - after_entropy;
-}
-
 std::vector<Eigen::Vector3i> VoxelCalculator::getNeighborIndices(const Eigen::Vector3i &index, int radius) {
     std::vector<Eigen::Vector3i> neighbors;
     for (int dx = -radius; dx <= radius; ++dx) {
@@ -104,94 +94,6 @@ void VoxelCalculator::buildVoxelMap(const PCLPointCloud::Ptr &cloud) {
     std::cout << "Build voxel map: " << total_entropy_ << " " << voxel_map_.size() << std::endl;
 }
 
-void VoxelCalculator::buildVoxelMap(const PCLPointCloud::Ptr &cloud, double alpha) {
-    voxel_map_.clear();
-    total_entropy_ = 0.0;
-    for (const auto &point : cloud->points) {
-        Eigen::Vector3d point_world = point.getVector3fMap().cast<double>();
-        Eigen::Vector3i voxel_index = getVoxelIndex(point_world);
-        auto it = voxel_map_.find(voxel_index);
-        if (it == voxel_map_.end()) {
-            VoxelInfo voxel_info;
-            voxel_info.num_points = 1;
-            voxel_info.mu = point_world;
-            voxel_info.sigma = Eigen::Matrix3d::Zero();
-            voxel_map_.emplace(voxel_index, voxel_info);
-        } else {
-            VoxelInfo &voxel_info = it->second;
-            voxel_info.num_points++;
-            Eigen::Vector3d delta = point_world - voxel_info.mu;
-            voxel_info.mu += delta / voxel_info.num_points;
-            voxel_info.sigma += delta * (point_world - voxel_info.mu).transpose();
-        }
-    }
-    for (auto &kv : voxel_map_) {
-        VoxelInfo &voxel_info = kv.second;
-        if (voxel_info.num_points > 1) {
-            computeVoxelRenyiEntropyPower(voxel_info, 0.5);
-            voxel_info.entropy_old = voxel_info.entropy;
-            total_entropy_ += kv.second.entropy;
-        } else {
-            voxel_info.sigma = Eigen::Matrix3d::Identity() * 1e-6;
-            computeVoxelRenyiEntropyPower(voxel_info, alpha);
-        }
-    }
-    std::cout << "Build voxel map: " << total_entropy_ << " " << voxel_map_.size() << std::endl;
-}
-
-double VoxelCalculator::updateVoxelMap(const PCLPointCloud::Ptr &cloud, const Eigen::Isometry3d &pose) {
-    double new_total_entropy = total_entropy_;
-    for (const auto &point : cloud->points) {
-        Eigen::Vector3d point_world = pose * point.getVector3fMap().cast<double>();
-        Eigen::Vector3i voxel_index = getVoxelIndex(point_world);
-        auto it = voxel_map_.find(voxel_index);
-        if (it == voxel_map_.end()) {
-            VoxelInfo voxel_info;
-            voxel_info.mu = point_world;
-            voxel_info.num_points = 1;
-            computeVoxelEntropy(voxel_info);
-            voxel_map_.emplace(voxel_index, voxel_info);
-            new_total_entropy += voxel_info.entropy;
-        } else {
-            VoxelInfo &voxel = it->second;
-            new_total_entropy -= voxel.entropy;
-            Eigen::Vector3d old_mu = voxel.mu;
-            voxel.mu = (voxel.mu * voxel.num_points + point_world) / (voxel.num_points + 1);
-            voxel.sigma = (voxel.num_points - 1.0) / voxel.num_points * voxel.sigma
-                          + (point_world - old_mu) * (point_world - voxel.mu).transpose();
-            voxel.num_points++;
-            computeVoxelEntropy(voxel);
-            new_total_entropy += voxel.entropy;
-        }
-    }
-    std::cout << "Update voxel map: " << new_total_entropy << " " << voxel_map_.size() << std::endl;
-    return total_entropy_ - new_total_entropy;
-}
-
-void VoxelCalculator::removePointCloudAndResetVoxels(const pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud) {
-    for (const auto &point : cloud->points) {
-        Eigen::Vector3d point_world = point.getVector3fMap().cast<double>();
-        Eigen::Vector3i voxel_index = getVoxelIndex(point_world);
-        auto it = voxel_map_.find(voxel_index);
-        if (it != voxel_map_.end()) {
-            VoxelInfo &voxel = it->second;
-            voxel.num_points--;
-            if (voxel.num_points > 0) {
-                Eigen::Vector3d old_mu = voxel.mu;
-                voxel.mu = (voxel.mu * (voxel.num_points + 1) - point_world) / voxel.num_points;
-                voxel.sigma = voxel.num_points / (voxel.num_points + 1.0) * (voxel.sigma -
-                                                                             (point_world - old_mu) *
-                                                                             (point_world - old_mu).transpose());
-                computeVoxelEntropy(voxel);
-            } else {
-                voxel_map_.erase(it);
-            }
-            voxel.active = 0;  // Reset voxel status
-            voxel.entropy_old = voxel.entropy;
-        }
-    }
-}
-
 void VoxelCalculator::computeVoxelEntropy(VoxelInfo &voxel) {
     if (voxel.num_points < 2) {
         voxel.entropy = 0;
@@ -209,26 +111,6 @@ void VoxelCalculator::computeVoxelEntropy(VoxelInfo &voxel) {
         }
     }
 }
-
-void VoxelCalculator::computeVoxelRenyiEntropyPower(VoxelInfo &voxel, double alpha) {
-    if (voxel.num_points < 2) {
-        voxel.entropy = 0;
-        voxel.energy = 0;
-    } else {
-        voxel.sigma /= (voxel.num_points - 1);
-        double det = voxel.sigma.determinant();
-        if (det <= 0) {
-            voxel.entropy = 0;
-            voxel.energy = 0;
-        } else {
-            constexpr double PI = 3.141592653589793238463;
-            double renyi_entropy = 1.0 / (1 - alpha) * std::log(std::pow(std::pow(2 * PI, 3) * det, (alpha - 1) / 2));
-            voxel.entropy = std::exp(2 * renyi_entropy / 3);
-            voxel.energy = voxel.sigma.trace();
-        }
-    }
-}
-
 
 double VoxelCalculator::computeWassersteinDistanceGaussian(const VoxelInfo &voxel1, const VoxelInfo &voxel2) {
     Eigen::Vector3d mu1 = voxel1.mu;
@@ -331,7 +213,6 @@ double VoxelCalculator::updateVoxelMap(const PCLPointCloud::Ptr &cloud) {
                           + (point_world - old_mu) * (point_world - voxel.mu).transpose();
             voxel.num_points++;
             computeVoxelEntropy(voxel);
-            //            computeVoxelRenyiEntropyPower(voxel, 0.5);
             // mark as active voxel if it's not new area
             if (voxel.active != 2) {
                 voxel.active = 1;
