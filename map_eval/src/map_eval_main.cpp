@@ -10,9 +10,8 @@
 *  MapEval: Towards Unified, Robust and Efficient SLAM Map Evaluation Framework (https://arxiv.org/abs/2411.17928)
 * 
 *  In a normal scenario, we recommend using the AC, CD, or AWD metrics to evaluate the accuracy of the SLAM maps.
-*  But when you do not have the ground truth map, you can use the MME.
+*  But when you do not have the ground truth map, you can only use the MME.
 *
-*  The code is written in C++ and uses the Open3D library just for demo testing.
 *  We appreciate any contributions to the project, and you can pull requests to the GitHub repository. 
 *  For more information about the MapEval project, please visit the project website: https://github.com/JokerJohn/Cloud_Map_Evaluation
 *  Copyright (C) 2025, Hong Kong University of Science and Technology.

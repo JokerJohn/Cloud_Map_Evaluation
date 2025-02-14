@@ -78,11 +78,10 @@ int MapEval::process() {
         computeMME(map_3d_, gt_3d_);
         std::cout << "INFO: MME calculation completed. Saving results." << std::endl;
         if (param_.save_immediate_result_) saveMmeResults();
+            // Log the MME calculation time
+        t2 = tic_toc.toc();
+        std::cout << "INFO: MME calculation completed in: " << (t2 - t1) / 1000.0 << " seconds." << std::endl;
     }
-
-    // Log the MME calculation time
-    t2 = tic_toc.toc();
-    std::cout << "INFO: MME calculation completed in: " << (t2 - t1) / 1000.0 << " seconds." << std::endl;
 
     // Start registration process
     std::cout << "INFO: Starting registration..." << std::endl;
@@ -400,12 +399,12 @@ void MapEval::saveRegistrationResults() {
     file_mt.lock();
     
     // Log RMSE, Mean, Std, and Compensation results
-    file_result << std::fixed << std::setprecision(15) << "RMSE: "
+    file_result << std::fixed << std::setprecision(15) << "RMSE/AC: "
                 << est_gt_results.at(1).transpose() << std::endl;
-    file_result << std::fixed << std::setprecision(15) << "Mean: "
-                << est_gt_results.at(0).transpose() << std::endl;
-    file_result << std::fixed << std::setprecision(15) << "Std: "
-                << est_gt_results.at(3).transpose() << std::endl;
+    // file_result << std::fixed << std::setprecision(15) << "Mean: "
+    //             << est_gt_results.at(0).transpose() << std::endl;
+    // file_result << std::fixed << std::setprecision(15) << "Std: "
+    //             << est_gt_results.at(3).transpose() << std::endl;
     file_result << std::fixed << std::setprecision(15) << "Comp: "
                 << est_gt_results.at(2).transpose() << std::endl;
     
@@ -480,7 +479,8 @@ void MapEval::saveRegistrationResults() {
     }
 
     // Optional: Render the geometry for visualization
-    visualization::DrawGeometries({map_3d_render_raw}, "Mesh Result Visualization");
+    visualization::DrawGeometries({map_3d_render_raw}, "Error Raw Map Visualization");
+    visualization::DrawGeometries({map_3d_render_inlier}, "Error Correspondence Map Visualization");
 }
 
 
@@ -1345,18 +1345,17 @@ void MapEval::calculateMetrics(pipelines::registration::RegistrationResult &regi
 
     // Calculate the distances between the estimated and ground truth point clouds
     vector<double> est_gt_dis(registration_result.correspondence_set_.size(), 0.0);
-    getDiffRegResult(est_gt_results,
-                     registration_result.correspondence_set_,
+    getDiffRegResult(est_gt_results,  registration_result.correspondence_set_,
                      *map_3d_, *gt_3d_, *corresponding_cloud_est, *corresponding_cloud_gt);
 
     std::cout << "INFO: Calculating est-gt metrics took: " << ticToc.toc() / 1000.0 << " [s]" << std::endl;
     t_acc = ticToc.toc() / 1000.0;
 
     // Log calculated metrics: RMSE, Mean, Standard deviation, Fitness score
-    std::cout << "INFO: RMSE: " << est_gt_results.at(1).transpose() << std::endl;
-    std::cout << "INFO: Mean error: " << est_gt_results.at(0).transpose() << std::endl;
-    std::cout << "INFO: Standard deviation: " << est_gt_results.at(3).transpose() << std::endl;
-    std::cout << "INFO: Fitness: " << est_gt_results.at(2).transpose() << std::endl;
+    std::cout << "INFO: RMSE/AC: " << est_gt_results.at(1).transpose() << std::endl;
+    // std::cout << "INFO: Mean error: " << est_gt_results.at(0).transpose() << std::endl;
+    // std::cout << "INFO: Standard deviation: " << est_gt_results.at(3).transpose() << std::endl;
+    std::cout << "INFO: Fitness/Overlap: " << est_gt_results.at(2).transpose() << std::endl;
 
     // F1 Score and Chamfer Distance
     f1_vec = Vector5d::Zero();
@@ -1387,7 +1386,7 @@ void MapEval::calculateMetrics(pipelines::registration::RegistrationResult &regi
     TicToc ticToc1;
     full_chamfer_dist = computeChamferDistance(*map_3d_, *gt_3d_);
     t_fcd = ticToc1.toc() / 1000.0;
-    std::cout << "INFO: Full point cloud Chamfer distance: " << full_chamfer_dist << std::endl;
+    std::cout << "INFO: Full Chamfer distance: " << full_chamfer_dist << std::endl;
     std::cout << "INFO: Chamfer distance calculation took: " << t_fcd << " [s]" << std::endl;
 }
 
