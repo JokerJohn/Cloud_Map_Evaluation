@@ -1,5 +1,5 @@
 /**
-*  @file   cloud_map_eval_node.cpp
+*  @file   map_eval_node.cpp
 *  @brief  Evaluate the accuracy of Point Cloud Maps using various metrics (e.g., Chamfer Distance, F1 Score, IoU).
 *  @author Xiangcheng Hu (xhubd@connect.ust.hk)
 *  @date   Feb 12, 2025
