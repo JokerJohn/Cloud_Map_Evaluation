@@ -1,4 +1,4 @@
-name: CMake on a single platform
+name: CMake CI
 
 on:
   push:
@@ -7,7 +7,6 @@ on:
     branches: [ "main" ]
 
 env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
 
 jobs:
@@ -20,20 +19,22 @@ jobs:
     - name: Install dependencies
       run: |
         sudo add-apt-repository ppa:open3d/ppa -y
-        sudo apt update
-        sudo apt install -y cmake g++ libeigen3-dev libyaml-cpp-dev libpcl-dev open3d
+        sudo apt-get update
+        sudo apt-get install -y \
+          cmake \
+          g++ \
+          libeigen3-dev \
+          libpcl-dev \
+          libyaml-cpp-dev \
+          open3d
 
     - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Build
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j 2
 
+    # 如果项目包含测试，保留以下部分；否则可删除
     - name: Test
       working-directory: ${{github.workspace}}/build
-      # Execute tests defined by the CMake configuration.
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest -C ${{env.BUILD_TYPE}}
