@@ -1,4 +1,4 @@
-name: CMake CI
+name: CMake CI (Ubuntu 20.04)
 
 on:
   push:
@@ -11,22 +11,26 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04 # 明确指定 Ubuntu 20.04
 
     steps:
     - uses: actions/checkout@v4
 
     - name: Install dependencies
       run: |
+        # 添加 Open3D 官方 PPA
+        sudo apt-get install -y software-properties-common
         sudo add-apt-repository ppa:open3d/ppa -y
         sudo apt-get update
+        
+        # 安装指定版本 Open3D (0.17+)
         sudo apt-get install -y \
+          libopen3d-dev=0.17.0+* \
           cmake \
           g++ \
           libeigen3-dev \
           libpcl-dev \
-          libyaml-cpp-dev \
-          open3d
+          libyaml-cpp-dev
 
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
@@ -34,7 +38,7 @@ jobs:
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j 2
 
-    # 如果项目包含测试，保留以下部分；否则可删除
+    # 可选测试步骤
     - name: Test
       working-directory: ${{github.workspace}}/build
       run: ctest -C ${{env.BUILD_TYPE}}
