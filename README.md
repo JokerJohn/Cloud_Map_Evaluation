@@ -27,9 +27,10 @@ These complementary aspects require different evaluation approaches, as global d
 
 ## News
 
+- **2025/02/25**: Accept to RAL!
 - **2025/02/12**: Codes released! 
 - **2025/02/05**: Resubmit.
-- **2024/12/19**: Submitted to IEEE RAL. When the paper accepted, **the new version of codes** will release! 
+- **2024/12/19**: Submitted to **IEEE RAL**! 
 
 ## Key Features
 
