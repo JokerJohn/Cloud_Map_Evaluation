@@ -47,8 +47,7 @@ These complementary aspects require different evaluation approaches, as global d
 - **Spatial Consistency Score** (SCS): Enhanced local consistency evaluation
 
 <div align="center">
-
-![image-20241129091604653](./README/image-20241129091604653.png)
+![image-20250304121753995](./README/image-20250304121753995.png)
 </div>
 
 ## Results
@@ -206,11 +205,11 @@ We kindly recommend to cite [our paper](https://arxiv.org/abs/2411.17928) if you
 @misc{hu2024mapeval,
       title={MapEval: Towards Unified, Robust and Efficient SLAM Map Evaluation Framework}, 
       author={Xiangcheng Hu and Jin Wu and Mingkai Jia and Hongyu Yan and Yi Jiang and Binqian Jiang and Wei Zhang and Wei He and Ping Tan},
-      year={2024},
-      eprint={2411.17928},
-      archivePrefix={arXiv},
-      primaryClass={cs.RO},
-      url={https://arxiv.org/abs/2411.17928}, 
+      year={2025},
+      volume={},
+      number={},
+      pages={1-1},
+  	  doi={10.1109/LRA.2025.3548441}
 }
 
 @ARTICLE{hu2024paloc,
