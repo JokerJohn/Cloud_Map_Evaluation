@@ -10,7 +10,7 @@
 <br>
 &dagger;project lead&emsp;*corresponding author
 
-<a href="https://arxiv.org/abs/2411.17928"><img src='https://img.shields.io/badge/Arxiv 2024- MapEval -red' alt='Paper PDF'></a><a ><img alt="PRs-Welcome" src="https://img.shields.io/badge/PRs-Welcome-white" /></a>[![GitHub Stars](https://img.shields.io/github/stars/JokerJohn/Cloud_Map_Evaluation.svg)](https://github.com/JokerJohn/Cloud_Map_Evaluation/stargazers)<a href="https://github.com/JokerJohn/PALoc/network/members">
+<a href="https://ieeexplore.ieee.org/document/10910156"><img src='https://img.shields.io/badge/RAL 2025- MapEval -red' alt='Paper PDF'></a><a ><img alt="PRs-Welcome" src="https://img.shields.io/badge/PRs-Welcome-white" /></a>[![GitHub Stars](https://img.shields.io/github/stars/JokerJohn/Cloud_Map_Evaluation.svg)](https://github.com/JokerJohn/Cloud_Map_Evaluation/stargazers)<a href="https://github.com/JokerJohn/PALoc/network/members">
 <img alt="FORK" src="https://img.shields.io/github/forks/JokerJohn/Cloud_Map_Evaluation?color=white" />
 </a> [![GitHub Issues](https://img.shields.io/github/issues/JokerJohn/Cloud_Map_Evaluation.svg)](https://github.com/JokerJohn/Cloud_Map_Evaluation/issues)[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
@@ -27,6 +27,7 @@ These complementary aspects require different evaluation approaches, as global d
 
 ## News
 
+- **2025/03/5**: [Formally published](https://ieeexplore.ieee.org/document/10910156)!
 - **2025/02/25**: Accept to RAL!
 - **2025/02/12**: Codes released! 
 - **2025/02/05**: Resubmit.
@@ -208,7 +209,7 @@ We kindly recommend to cite [our paper](https://arxiv.org/abs/2411.17928) if you
       year={2025},
       volume={},
       number={},
-      pages={1-1},
+      pages={1-8},
   	  doi={10.1109/LRA.2025.3548441}
 }
 
