@@ -27,7 +27,7 @@ These complementary aspects require different evaluation approaches, as global d
 
 ## News
 
-- **2025/03/5**: [Formally published](https://ieeexplore.ieee.org/document/10910156)!
+- **2025/03/05**: [Formally published](https://ieeexplore.ieee.org/document/10910156)!
 - **2025/02/25**: Accept to RAL!
 - **2025/02/12**: Codes released! 
 - **2025/02/05**: Resubmit.
