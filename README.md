@@ -207,9 +207,9 @@ We kindly recommend to cite [our paper](https://arxiv.org/abs/2411.17928) if you
       title={MapEval: Towards Unified, Robust and Efficient SLAM Map Evaluation Framework}, 
       author={Xiangcheng Hu and Jin Wu and Mingkai Jia and Hongyu Yan and Yi Jiang and Binqian Jiang and Wei Zhang and Wei He and Ping Tan},
       year={2025},
-      volume={},
-      number={},
-      pages={1-8},
+      volume={10},
+      number={5},
+      pages={4228-4235},
   	  doi={10.1109/LRA.2025.3548441}
 }
 
