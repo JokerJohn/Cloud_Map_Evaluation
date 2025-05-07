@@ -44,7 +44,6 @@ int main(int argc, char **argv) {
     bool evaluate_mme = config["evaluate_mme"].as<bool>();
     bool evaluate_gt_mme = config["evaluate_gt_mme"].as<bool>();
     bool evaluate_using_initial_ = config["evaluate_using_initial"].as<bool>();
-    bool evaluate_noise_gt_ = config["evaluate_noise_gt"].as<bool>();
     double nn_radius = config["nn_radius"].as<double>();
     double vmd_voxel_size = config["vmd_voxel_size"].as<double>();
 
@@ -57,7 +56,7 @@ int main(int argc, char **argv) {
     std::string pcd_file_name = "map.pcd";
 
     Param param(est_path, gt_path, results_path, initial_matrix, scene_name, method, icp_max_distance, accuracy_level, 
-         save_immediate_result, evaluate_mme, evaluate_gt_mme, pcd_file_name, evaluate_using_initial_,  evaluate_noise_gt_, 0.01, nn_radius, vmd_voxel_size);
+         save_immediate_result, evaluate_mme, evaluate_gt_mme, pcd_file_name, evaluate_using_initial_,  false, 0.01, nn_radius, vmd_voxel_size);
     MapEval map_eval(param);
     map_eval.process();
 

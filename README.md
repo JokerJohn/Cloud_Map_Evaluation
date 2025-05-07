@@ -27,6 +27,7 @@ These complementary aspects require different evaluation approaches, as global d
 
 ## News
 
+- **2025/05/05:** Add new test data and remove the simulation codes.
 - **2025/03/05**: [Formally published](https://ieeexplore.ieee.org/document/10910156)!
 - **2025/02/25**: Accept to RAL!
 - **2025/02/12**: Codes released! 
@@ -72,12 +73,12 @@ These complementary aspects require different evaluation approaches, as global d
 
 ## Computational Efficiency
 
-| ![image-20241129091927786](./README/image-20241129091927786.png) |
+| ![image-20250322192323830](./README/image-20250322192323830.png) |
 | ------------------------------------------------------------ |
 
 ## Parameter Sensitivity Analysis
 
-| ![image-20241127084154114](./README/image-20241127084154114.png) |
+| ![image-20250322192349614](./README/image-20250322192349614.png) |
 | ------------------------------------------------------------ |
 
 ## Datasets
@@ -85,7 +86,7 @@ These complementary aspects require different evaluation approaches, as global d
 | [MS-dataset](https://github.com/JokerJohn/MS-Dataset) | [FusionPortable (FP) and FusionPortableV2 dataset](https://fusionportable.github.io/dataset/fusionportable_v2/) | [Newer College (NC)](https://ori-drs.github.io/newer-college-dataset/) | [ GEODE dataset (GE)](https://github.com/PengYu-Team/GEODE_dataset) |
 | ----------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
 
-| ![image-20241129091746334](./README/image-20241129091746334.png) |
+| ![image-20250322192302315](./README/image-20250322192302315.png) |
 | ------------------------------------------------------------ |
 
 
@@ -100,9 +101,10 @@ These complementary aspects require different evaluation approaches, as global d
 
 ### Test Data(password: 1)
 
-| sequence | Test PCD                                                     | GT PCD                                                       |
-| -------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| MCR_slow | [map.pcd](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/ES9eSANEr-9NvkFqMzMFsecBo5r3hBpBnj0c6BMPgsfXnQ?e=aijdPf) | [map_gt.pcd](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/ESfn5EEsiPlCiJcydVc_HqgBDGqy65MHoyu63XE-iKbFBQ?e=dTDon4) |
+| sequence |                                                              | Test PCD                                                     | GT PCD                                                       |
+| -------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| MCR_slow | ![image-20250508072719975](./README/image-20250508072719975.png) | [map.pcd](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/ES9eSANEr-9NvkFqMzMFsecBo5r3hBpBnj0c6BMPgsfXnQ?e=aijdPf) | [map_gt.pcd](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/ESfn5EEsiPlCiJcydVc_HqgBDGqy65MHoyu63XE-iKbFBQ?e=dTDon4) |
+| PK01     | ![image-20250508072544312](./README/image-20250508072544312.png) | [map.pcd](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/ERPFVJN6CtBKtHlPWyni-jIB0dgLzgF1FGxPTatKoCp02Q?e=TEgfBp) | [gt.pcd](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/EeztnFHwKJlCoW-fmKljaMMBSvNvT5BkTXxoA1iXqeUS5A?e=37evMi) |
 
 ### Usage
 
@@ -154,7 +156,7 @@ We can also get a rendered raw distance-error map(10cm) and inlier distance-erro
 
 ![image (4)](./README/image%20(4).png)
 
-if we do not have gt map, we can evaluate the **Mean Map Entropy (MME)**, smaller means better consistency.
+if we do not have gt map, we can evaluate the **Mean Map Entropy (MME)**, smaller means better consistency. just set `evaluate_mme: false` in **[config.yaml](map_eval/config/config.yaml)**.
 
 ![image (5)](./README/image%20(5).png)
 

@@ -33,7 +33,7 @@ scene_name: redbird_02
 save_immediate_result: true
 
 # if evaluate Mean Map Entropy (MME) if you do not have ground truth map
-# but remember, MME can be only used for map comparison  with the same scale, e.g., maps are for odometry.
+# but remember, MME can be only used for map comparison with the same scale, e.g., maps are for odometry.
 # it costs a lot of time to calculate MME, so we set it as false by default
 evaluate_mme: false
 
