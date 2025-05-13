@@ -199,7 +199,6 @@ The primary function of the r**aw rendered map** (left) is to color-code the err
 
 ![image (6)](./README/image%20(6).png)
 
-
 ## Publications
 
 We kindly recommend to cite [our paper](https://arxiv.org/abs/2411.17928) if you find this library useful:
@@ -225,6 +224,19 @@ We kindly recommend to cite [our paper](https://arxiv.org/abs/2411.17928) if you
   pages={4297-4308},
   doi={10.1109/TMECH.2024.3362902}}
 ```
+
+## Related Package
+
+The folloing work using MapEval for map evalution.
+
+| Work                                                  | Task                                     | Date      | Metrics   | Demo                                                         |
+| ----------------------------------------------------- | ---------------------------------------- | --------- | --------- | ------------------------------------------------------------ |
+| **[CompSLAM](https://arxiv.org/abs/2505.06483)**      | Multi-Modal Localization<br/>and Mapping | 2025      | AWD/SCS   | ![image-20250513202215918](./README/image-20250513202215918.png) |
+| [ELite](https://github.com/dongjae0107/ELite)         | LiDAR-based Lifelong Mapping             | 2025      | AC/CD     | ![image-20250513202654237](./README/image-20250513202654237.png) |
+| [PALoc](https://github.com/JokerJohn/PALoc)           | Prior-Assisted 6-DoF Localization        | 2024      | AC/CD     | ![image-20250513203017745](./README/image-20250513203017745.png) |
+| [MS-Mapping](https://github.com/JokerJohn/MS-Mapping) | Multi-session LiDAR mapping              | 2024      | AC/CD/MME | ![image-20240730152951528](./README/image-20240730152951528.png) |
+| FusionPortableV2                                      | SLAM Dataset                             | IJRR'2024 | COM/CD    | ![img](./README/10.1177_02783649241303525-fig15.jpg)         |
+| [GEODE](https://github.com/PengYu-Team/GEODE_dataset) | SLAM Dataset                             | IJRR'2025 |           | ![image-20250513204209752](./README/image-20250513204209752.png) |
 
 ## Contributors
 
