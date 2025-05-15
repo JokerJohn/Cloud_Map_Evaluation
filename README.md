@@ -191,9 +191,8 @@ we can use [CloudCompare](https://github.com/CloudCompare/CloudCompare) to align
 
 - Manually register the moved LIO map (aligned) to the GT map (reference), and get the output of the terminal transfrom `T2`, then the initial pose matrix is the terminal output transform `T`.
 
-![image-20230106135937336](README/image-20230106135937336.png)
-
-![image-20230106140017020](README/image-20230106140017020.png)
+| ![image-20230106135937336](README/image-20230106135937336.png) | ![image-20230106140017020](README/image-20230106140017020.png) |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
 
 ### What's the difference between raw rendered map and inlier rendered map? (remindered by [John-Henawy](https://github.com/John-Henawy) in [issue 5](https://github.com/JokerJohn/Cloud_Map_Evaluation/issues/5))
 
