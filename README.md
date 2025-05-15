@@ -210,8 +210,6 @@ The primary function of the r**aw rendered map** (left) is to color-code the err
 
    - For example, **you cannot compare a LIO map with a LIO SLAM map** that has performed loop closure optimization. This is because loop closure adjusts the local point cloud structure, leading to inaccurate MME evaluation. You can compare the MME of different LIO maps.
 
-
-
 ## Publications
 
 We kindly recommend to cite [our paper](https://arxiv.org/abs/2411.17928) if you find this library useful:
