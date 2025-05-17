@@ -242,6 +242,7 @@ The folloing works use MapEval for map evalution.
 
 | Work                                                         | Tasks                                    | Date       | Metrics   | Demo                                                         |
 | ------------------------------------------------------------ | ---------------------------------------- | ---------- | --------- | ------------------------------------------------------------ |
+| [**LEMON-Mapping**](https://arxiv.org/abs/2505.10018)        | Multi-Session Point Cloud mapping        | Arxiv'2025 | MME       | ![image-20250517201051378](./README/image-20250517201051378.png) |
 | **[CompSLAM](https://arxiv.org/abs/2505.06483)**             | Multi-Modal Localization<br/>and Mapping | Arxiv'2025 | AWD/SCS   | ![image-20250513202215918](./README/image-20250513202215918.png) |
 | [**ELite**](https://github.com/dongjae0107/ELite)            | LiDAR-based Lifelong Mapping             | ICRA'2025  | AC/CD     | ![image-20250513202654237](./README/image-20250513202654237.png) |
 | [**PALoc**](https://github.com/JokerJohn/PALoc)              | Prior-Assisted 6-DoF Localization        | TMECH'2024 | AC/CD     | ![image-20250513205043100](./README/image-20250513205043100.png) |
