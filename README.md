@@ -29,7 +29,7 @@ These complementary aspects require different evaluation approaches, as global d
 
 - **2025/05/05:** Add new test data and remove the simulation codes.
 - **2025/03/05**: [Formally published](https://ieeexplore.ieee.org/document/10910156)!
-- **2025/02/25**: Accept to RAL!
+- **2025/02/25**: Accept!
 - **2025/02/12**: Codes released! 
 - **2025/02/05**: Resubmit.
 - **2024/12/19**: Submitted to **IEEE RAL**! 
@@ -194,9 +194,9 @@ we can use [CloudCompare](https://github.com/CloudCompare/CloudCompare) to align
 | ![image-20230106135937336](README/image-20230106135937336.png) | ![image-20230106140017020](README/image-20230106140017020.png) |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 
-### What's the difference between raw rendered map and inlier rendered map? (remindered by [John-Henawy](https://github.com/John-Henawy) in [issue 5](https://github.com/JokerJohn/Cloud_Map_Evaluation/issues/5))
+### What's the difference between raw rendered map and inlier rendered map? 
 
-The primary function of the r**aw rendered map** (left) is to color-code the error of all points in the map estimated by the algorithm. For each point in the estimated map that does not find a corresponding point in the **ground truth (gt) map**, it is defaulted to the maximum error (**20cm**), represented as red. On the other hand, the i**nlier rendered map** (right) excludes the non-overlapping regions of the point cloud and colors only the error of the inlier points after point cloud matching. This map therefore contains only a portion of the points from the original estimated map.
+The primary function of the r**aw rendered map** (left) is to color-code the error of all points in the map estimated by the algorithm. For each point in the estimated map that does not find a corresponding point in the **ground truth (gt) map**, it is defaulted to the maximum error (**20cm**), represented as red. On the other hand, the i**nlier rendered map** (right) excludes the non-overlapping regions of the point cloud and colors only the error of the inlier points after point cloud matching. This map therefore contains only a portion of the points from the original estimated map. (remindered by [John-Henawy](https://github.com/John-Henawy) in [issue 5](https://github.com/JokerJohn/Cloud_Map_Evaluation/issues/5))
 
 ![image (6)](./README/image%20(6).png)
 
@@ -206,13 +206,12 @@ The primary function of the r**aw rendered map** (left) is to color-code the err
 
 2. **Without a ground truth map** (remindered by [@Silentbarber](https://github.com/Silentbarber), [ZOUYIyi](https://github.com/ZOUYIyi) in [issue 4](https://github.com/JokerJohn/Cloud_Map_Evaluation/issues/4) and [issue 7](https://github.com/JokerJohn/Cloud_Map_Evaluation/issues/7)):
 
-    Only **MME** can be used for evaluation. It is crucial to remember that the maps being evaluated must be on the same scale.
-
-   - For example, **you cannot compare a LIO map with a LIO SLAM map** that has performed loop closure optimization. This is because loop closure adjusts the local point cloud structure, leading to inaccurate MME evaluation. You can compare the MME of different LIO maps.
+    - Only **MME** can be used for evaluation. It is crucial to remember that the maps being evaluated must be on the same scale. 
+- For example, **you cannot compare a LIO map with a LIO SLAM map** that has performed loop closure optimization. This is because loop closure adjusts the local point cloud structure, leading to inaccurate MME evaluation. You can compare the MME of different LIO maps.
 
 ## Publications
 
-We kindly recommend to cite [our paper](https://arxiv.org/abs/2411.17928) if you find this library useful:
+We recommend to cite [our paper](https://arxiv.org/abs/2411.17928) if you find this library useful:
 
 ```latex
 @misc{hu2024mapeval,
@@ -225,15 +224,14 @@ We kindly recommend to cite [our paper](https://arxiv.org/abs/2411.17928) if you
   	  doi={10.1109/LRA.2025.3548441}
 }
 
-@ARTICLE{hu2024paloc,
-  author={Hu, Xiangcheng and Zheng, Linwei and Wu, Jin and Geng, Ruoyu and Yu, Yang and Wei, Hexiang and Tang, Xiaoyu and Wang, Lujia and Jiao, Jianhao and Liu, Ming},
-  journal={IEEE/ASME Transactions on Mechatronics}, 
-  title={PALoc: Advancing SLAM Benchmarking With Prior-Assisted 6-DoF Trajectory Generation and Uncertainty Estimation}, 
+@article{wei2024fpv2,
+  title={Fusionportablev2: A unified multi-sensor dataset for generalized slam across diverse platforms and scalable environments},
+  author={Wei, Hexiang and Jiao, Jianhao and Hu, Xiangcheng and Yu, Jingwen and Xie, Xupeng and Wu, Jin and Zhu, Yilong and Liu, Yuxuan and Wang, Lujia and Liu, Ming},
+  journal={The International Journal of Robotics Research},
+  pages={02783649241303525},
   year={2024},
-  volume={29},
-  number={6},
-  pages={4297-4308},
-  doi={10.1109/TMECH.2024.3362902}}
+  publisher={SAGE Publications Sage UK: London, England}
+}
 ```
 
 ## Related Package
