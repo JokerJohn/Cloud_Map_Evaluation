@@ -207,7 +207,8 @@ The primary function of the r**aw rendered map** (left) is to color-code the err
 2. **Without a ground truth map** (remindered by [@Silentbarber](https://github.com/Silentbarber), [ZOUYIyi](https://github.com/ZOUYIyi) in [issue 4](https://github.com/JokerJohn/Cloud_Map_Evaluation/issues/4) and [issue 7](https://github.com/JokerJohn/Cloud_Map_Evaluation/issues/7)):
 
     - Only **MME** can be used for evaluation. It is crucial to remember that the maps being evaluated must be on the same scale. 
-- For example, **you cannot compare a LIO map with a LIO SLAM map** that has performed loop closure optimization. This is because loop closure adjusts the local point cloud structure, leading to inaccurate MME evaluation. You can compare the MME of different LIO maps.
+
+      > For example, **you cannot compare a LIO map with a LIO SLAM map** that has performed loop closure optimization. This is because loop closure adjusts the local point cloud structure, leading to inaccurate MME evaluation. You can compare the MME of different LIO maps.
 
 ## Publications
 
@@ -253,3 +254,5 @@ The folloing works use MapEval for map evalution.
 <a href="https://github.com/JokerJohn/Cloud_Map_Evaluation/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=JokerJohn/Cloud_Map_Evaluation" />
 </a>
+
+![Star History Chart](https://api.star-history.com/svg?repos=JokerJohn/Cloud_Map_Evaluation&type=Date)
