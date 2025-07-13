@@ -27,6 +27,7 @@ These complementary aspects require different evaluation approaches, as global d
 
 ## News
 
+- **2025/07/05:** Update the parameter setting and more config examples.
 - **2025/05/05:** Add new test data and remove the simulation codes.
 - **2025/03/05**: [Formally published](https://ieeexplore.ieee.org/document/10910156)!
 - **2025/02/25**: Accept!

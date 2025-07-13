@@ -14,6 +14,11 @@
 #include <filesystem>
 #include <experimental/filesystem>
 #include <future>
+
+
+#include <yaml-cpp/yaml.h>
+#include <iostream>
+#include <stdexcept>
 #include "tic_toc.h"
 #include "voxel_calculator.hpp"
 
@@ -22,7 +27,9 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 #else
+
 #include <experimental/filesystem>
+
 namespace fs = std::experimental::filesystem;
 #endif
 
@@ -65,40 +72,18 @@ struct Param {
     bool evaluate_gt_mme_ = true;  // Flag to evaluate ground truth MME
     bool evaluate_using_initial_ = true;  // Flag to evaluate using initial transformation matrix
     bool evaluate_noised_gt_ = false;  // Flag to add noise to ground truth for simulation
+    bool use_visualization = false;
+    bool enable_debug = false;
 
     // Transformation and noise parameters
     Vector5d trunc_dist_;  // Truncation distance (for point cloud processing)
     Eigen::Matrix4d initial_matrix_ = Eigen::Matrix4d::Identity();  // Initial transformation matrix
     double noise_std_dev_ = 0.1;  // Standard deviation of Gaussian noise added to point cloud
     double vmd_voxel_size_ = 3.0;  // Voxel size for VMD (Voxel-based Metric Distance)
+    double downsample_size = 0.01;
 
     // Default constructor
     Param() {}
-
-    // Parametrized constructor to initialize the parameters
-    Param(std::string evaluation_map_pcd_path, std::string map_gt_path,
-          std::string result_path, Eigen::Matrix4d initial_matrix,
-          std::string name, int method, double icp_max_distance,
-          Vector5d trunc_dist, bool save_immediate_result, bool evaluate_mme, bool evaluate_gt_mme,
-          std::string pcd_file_name, bool evaluate_using_initial, bool evaluate_noised_gt, double noise_std_dev, double nn_radius,
-           double vmd_voxel_size)
-            : evaluation_map_pcd_path_(evaluation_map_pcd_path),
-              map_gt_path_(map_gt_path),
-              result_path_(result_path),
-              initial_matrix_(initial_matrix),
-              name_(name),
-              evaluation_method_(method),
-              icp_max_distance_(icp_max_distance),
-              trunc_dist_(trunc_dist),
-              save_immediate_result_(save_immediate_result),
-              evaluate_mme_(evaluate_mme), evaluate_gt_mme_(evaluate_gt_mme),
-              pcd_file_name_(pcd_file_name),
-              evaluate_using_initial_(evaluate_using_initial),
-              evaluate_noised_gt_(evaluate_noised_gt),
-              noise_std_dev_(noise_std_dev),
-              nn_radius_(nn_radius),
-              vmd_voxel_size_(vmd_voxel_size)
-    {}
 
     // Method to print out the parameters
     void printParam() const {
@@ -125,10 +110,12 @@ struct Param {
 };
 
 
+
+
 class MapEval {
 public:
     MapEval(Param &param)
-        : param_(param), map_3d_(new PointCloud), gt_3d_(new PointCloud), processed_points(9) {
+            : param_(param), map_3d_(new PointCloud), gt_3d_(new PointCloud), processed_points(9) {
 
         // Print configuration parameters for the evaluation
         param_.printParam();
@@ -157,6 +144,8 @@ public:
             subfolder = "merged_maps_s0_results/";
         } else if (param_.pcd_file_name_ == "merged_maps_s1_trans.pcd") {
             subfolder = "merged_maps_s1_results/";
+        } else if (param_.pcd_file_name_ == "global_pcd_lidar.pcd") {
+            subfolder = "map_results/";
         } else {
             subfolder = "map_results/";
             std::cerr << "ERROR: Invalid PCD file name: " << param_.pcd_file_name_ << std::endl;
@@ -187,7 +176,8 @@ public:
         time_stream << std::put_time(std::localtime(&now_c), "%Y-%m-%d %X");  // Example format: YYYY-MM-DD HH:MM:SS
 
         // Output experiment name, timestamp, and paths to the results file
-        file_result << param_.name_ << " ===================== " << time_stream.str() << " ===================== " << std::endl;
+        file_result << param_.name_ << " ===================== " << time_stream.str() << " ===================== "
+                    << std::endl;
         file_result << "Ground Truth Path: " << param_.map_gt_path_ << std::endl;
         file_result << "Evaluation Map Path: " << param_.evaluation_map_pcd_path_ + param_.pcd_file_name_ << std::endl;
 
@@ -204,7 +194,7 @@ public:
 
     void computeMME();
 
-    void computeMME(shared_ptr<PointCloud> &cloud_, shared_ptr<PointCloud> &cloud_gt_);
+    void computeMME(shared_ptr <PointCloud> &cloud_, shared_ptr <PointCloud> &cloud_gt_);
 
     void performRegistration();
 
@@ -215,52 +205,52 @@ public:
     void saveRegistrationResults();
 
     template<typename T>
-    map<string, double> calculateError(vector<T> &result_vec);
+    map<string, double> calculateError(vector <T> &result_vec);
 
     vector<double> computePointCloudDistance(
-            shared_ptr<PointCloud> &reference_points,
-            shared_ptr<PointCloud> &target_points);
+            shared_ptr <PointCloud> &reference_points,
+            shared_ptr <PointCloud> &target_points);
 
-    std::shared_ptr<PointCloud> renderDistanceOnPointCloud(
-            std::shared_ptr<PointCloud> &reference_points,
-            std::shared_ptr<PointCloud> &target_points, const double &dis);
+    std::shared_ptr <PointCloud> renderDistanceOnPointCloud(
+            std::shared_ptr <PointCloud> &reference_points,
+            std::shared_ptr <PointCloud> &target_points, const double &dis);
 
-    std::shared_ptr<open3d::geometry::PointCloud> ColorPointCloudByMME(
-            const std::shared_ptr<open3d::geometry::PointCloud> &pointcloud,
+    std::shared_ptr <open3d::geometry::PointCloud> ColorPointCloudByMME(
+            const std::shared_ptr <open3d::geometry::PointCloud> &pointcloud,
             const std::vector<double> &entropies,
             double mean_entropy);
 
-    std::shared_ptr<open3d::geometry::PointCloud> ColorPointCloudByMME(
-            const std::shared_ptr<open3d::geometry::PointCloud> &pointcloud,
+    std::shared_ptr <open3d::geometry::PointCloud> ColorPointCloudByMME(
+            const std::shared_ptr <open3d::geometry::PointCloud> &pointcloud,
             const std::vector<double> &entropies,
             double min_abs_entropy, double max_abs_entropy);
 
-    std::shared_ptr<open3d::geometry::PointCloud> ColorPointCloudByMME(
-            const std::shared_ptr<open3d::geometry::PointCloud> &pointcloud,
+    std::shared_ptr <open3d::geometry::PointCloud> ColorPointCloudByMME(
+            const std::shared_ptr <open3d::geometry::PointCloud> &pointcloud,
             const std::vector<double> &entropies);
 
 
-    std::shared_ptr<Mesh> renderDistanceOnMesh(
-            std::shared_ptr<PointCloud> &reference_points,
-            std::shared_ptr<Mesh> &target_mesh,
-            std::shared_ptr<PointCloud> &target_points, double dis);
+    std::shared_ptr <Mesh> renderDistanceOnMesh(
+            std::shared_ptr <PointCloud> &reference_points,
+            std::shared_ptr <Mesh> &target_mesh,
+            std::shared_ptr <PointCloud> &target_points, double dis);
 
-    shared_ptr<Mesh> createMeshFromPCD(shared_ptr<PointCloud> &reference_points,
-                                       double density_thres, int depth);
+    shared_ptr <Mesh> createMeshFromPCD(shared_ptr <PointCloud> &reference_points,
+                                        double density_thres, int depth);
 
-    void getDiffRegResult(std::vector<Vector5d> &result,
+    void getDiffRegResult(std::vector <Vector5d> &result,
                           pipelines::registration::CorrespondenceSet &points_set,
                           geometry::PointCloud &source,
                           geometry::PointCloud &target);
 
-    void getDiffRegResult(std::vector<Vector5d> &result,
+    void getDiffRegResult(std::vector <Vector5d> &result,
                           pipelines::registration::CorrespondenceSet &points_set,
                           geometry::PointCloud &source,
                           geometry::PointCloud &target,
                           geometry::PointCloud &source_set,
                           geometry::PointCloud &target_set);
 
-    void getDiffRegResult(std::vector<Vector5d> &result,
+    void getDiffRegResult(std::vector <Vector5d> &result,
                           pipelines::registration::CorrespondenceSet &points_set,
                           geometry::PointCloud &source,
                           geometry::PointCloud &target,
@@ -268,7 +258,7 @@ public:
                           Eigen::MatrixXd &target_set);
 
     void getDiffRegResultWithCorrespondence(
-            std::vector<Vector5d> &result,
+            std::vector <Vector5d> &result,
             pipelines::registration::CorrespondenceSet &points_set,
             geometry::PointCloud &source,
             geometry::PointCloud &target,
@@ -289,47 +279,47 @@ public:
 
     double ComputeEntropy(const Eigen::Matrix3d &covariance);
 
-    double ComputeMeanMapEntropy(const std::shared_ptr<open3d::geometry::PointCloud> &pointcloud,
+    double ComputeMeanMapEntropy(const std::shared_ptr <open3d::geometry::PointCloud> &pointcloud,
                                  std::vector<double> &entropies, double radius);
 
-    double ComputeMeanMapEntropyUsingNormal(const std::shared_ptr<open3d::geometry::PointCloud> &pointcloud,
+    double ComputeMeanMapEntropyUsingNormal(const std::shared_ptr <open3d::geometry::PointCloud> &pointcloud,
                                             std::vector<double> &entropies, double radius);
 
     void StartProcessing(int total);  // 开始处理的函数声明
 
-    void addGaussianNoise(std::shared_ptr<open3d::geometry::PointCloud> &cloud,
+    void addGaussianNoise(std::shared_ptr <open3d::geometry::PointCloud> &cloud,
                           double noise_std_dev);
 
     // 非均匀密度变化
-    void addNonUniformDensity(std::shared_ptr<open3d::geometry::PointCloud> &cloud,
+    void addNonUniformDensity(std::shared_ptr <open3d::geometry::PointCloud> &cloud,
                               double sparse_ratio,    // 稀疏区域保留比例
                               double dense_ratio,     // 密集区域保留比例
                               double region_size);    // 区域大小
     // 添加离群点
-    void addSparseOutliers(std::shared_ptr<open3d::geometry::PointCloud> &cloud,
+    void addSparseOutliers(std::shared_ptr <open3d::geometry::PointCloud> &cloud,
                            double outlier_ratio,      // 离群点比例
                            double outlier_range);     // 离群点最大距离
     // 局部几何变形
-    void addLocalDeformation(std::shared_ptr<open3d::geometry::PointCloud> &cloud,
+    void addLocalDeformation(std::shared_ptr <open3d::geometry::PointCloud> &cloud,
                              double deform_radius,     // 变形区域半径
                              double deform_strength,   // 变形强度
                              Eigen::Vector3d center);  // 变形中心
 
 private:
     // 辅助函数：计算点到中心的距离
-    double computeDistance(const Eigen::Vector3d& p1, const Eigen::Vector3d& p2);
+    double computeDistance(const Eigen::Vector3d &p1, const Eigen::Vector3d &p2);
 
 public:
     Param param_;
 
 private:
-    shared_ptr<PointCloud> map_3d_, gt_3d_, noised_gt_3d_;
+    shared_ptr <PointCloud> map_3d_, gt_3d_, noised_gt_3d_;
     double t1, t2, t3, t4, t5, t6, t7, t_fcd, t_acc;
     double t_vmd, t_v, t_cdf, t_scs;
-    shared_ptr<PointCloud> map_3d_render_inlier, map_3d_render_raw;
-    shared_ptr<PointCloud> map_3d_entropy, gt_3d_entropy;
-    shared_ptr<PointCloud> corresponding_cloud_est, corresponding_cloud_gt;
-    std::vector<Vector5d> est_gt_results, gt_est_results;
+    shared_ptr <PointCloud> map_3d_render_inlier, map_3d_render_raw;
+    shared_ptr <PointCloud> map_3d_entropy, gt_3d_entropy;
+    shared_ptr <PointCloud> corresponding_cloud_est, corresponding_cloud_gt;
+    std::vector <Vector5d> est_gt_results, gt_est_results;
     Vector5d f1_vec = Vector5d::Zero();
     Vector5d cd_vec = Vector5d::Zero();
     Vector5d iou_vec = Vector5d::Zero();
@@ -340,8 +330,8 @@ private:
 
     double scs_overall = 0.0;
     bool eva_mesh = false;
-    shared_ptr<Mesh> gt_mesh, est_mesh;
-    shared_ptr<Mesh> gt_mesh_filtered, est_mesh_filtered;
+    shared_ptr <Mesh> gt_mesh, est_mesh;
+    shared_ptr <Mesh> gt_mesh_filtered, est_mesh_filtered;
 
     std::string subfolder;
     std::string results_subfolder;

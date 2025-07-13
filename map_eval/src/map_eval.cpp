@@ -33,8 +33,8 @@ int MapEval::process() {
     }
 
     // Downsample the point clouds for efficiency
-    map_3d_ = map_3d_->VoxelDownSample(0.01);
-    gt_3d_ = gt_3d_->VoxelDownSample(0.01);
+    map_3d_ = map_3d_->VoxelDownSample(param_.downsample_size);
+    gt_3d_ = gt_3d_->VoxelDownSample(param_.downsample_size);
     //    open3d::io::WritePointCloud(resul bvts_subfolder + "gt_map_1cm.pcd",  *gt_3d_);
 
     // Log the number of points in both point clouds
@@ -116,7 +116,7 @@ void MapEval::computeMME() {
     }
 }
 
-void MapEval::computeMME(shared_ptr<PointCloud> &cloud_, shared_ptr<PointCloud> &cloud_gt_) {
+void MapEval::computeMME(shared_ptr <PointCloud> &cloud_, shared_ptr <PointCloud> &cloud_gt_) {
     if (param_.evaluate_mme_) {
         TicToc tic_toc;
         // Compute Mean Map Entropy for the given cloud
@@ -168,7 +168,9 @@ void MapEval::performRegistration() {
 
         est_mesh = createMeshFromPCD(map_3d_, 0.6, 10);
         t3 = tic_toc.toc();  // Measure time for mesh creation
-        std::cout << "INFO: Mesh creation time: " << (t3) / 1000.0 << " [s]" << std::endl;
+        if (param_.enable_debug) {
+            std::cout << "INFO: Mesh creation time: " << (t3) / 1000.0 << " [s]" << std::endl;
+        }
     }
 
     // Perform ICP registration
@@ -190,7 +192,10 @@ void MapEval::performRegistration() {
     // Calculate metrics and evaluate the results
     calculateMetrics(registration_result);
     t5 = tic_toc.toc();  // Measure time for metric calculation
-    std::cout << "INFO: Metrics calculation time: " << (t7 - t5) / 1000.0 << " [s]" << std::endl;
+
+    if (param_.enable_debug) {
+        std::cout << "INFO: Metrics calculation time: " << (t7 - t5) / 1000.0 << " [s]" << std::endl;
+    }
 }
 
 
@@ -309,7 +314,7 @@ void MapEval::calculateVMD() {
         double ws_distance = kv.second;
 
         // Get neighboring voxel indices
-        std::vector<Eigen::Vector3i> neighbors = est_calculator.getNeighborIndices(index, radius);
+        std::vector <Eigen::Vector3i> neighbors = est_calculator.getNeighborIndices(index, radius);
         std::vector<double> neighbor_ws_distances;
 
         for (const auto &neighbor_index : neighbors) {
@@ -365,10 +370,13 @@ void MapEval::saveMmeResults() {
 void MapEval::saveRegistrationResults() {
 
     // Log time taken for different stages
-    std::cout << "INFO: AC+MME Time: " << t_acc + (t2 - t1) / 1000.0 << std::endl;
-    std::cout << "INFO: CD+MME Time: " << t_fcd + (t2 - t1) / 1000.0 << std::endl;
-    std::cout << "INFO: AWD+SCS Time: " << t_v / 1000.0 + (t_vmd - t_v) / 1000.0 + (t_scs - t_cdf) / 1000.0
-              << std::endl;
+    if (param_.enable_debug) {
+        std::cout << "INFO: AC+MME Time: " << t_acc + (t2 - t1) / 1000.0 << std::endl;
+        std::cout << "INFO: CD+MME Time: " << t_fcd + (t2 - t1) / 1000.0 << std::endl;
+        std::cout << "INFO: AWD+SCS Time: " << t_v / 1000.0 + (t_vmd - t_v) / 1000.0 + (t_scs - t_cdf) / 1000.0
+                  << std::endl;
+    }
+
 
     // Save file results
     file_mt.lock();
@@ -439,7 +447,7 @@ void MapEval::saveRegistrationResults() {
     // Save meshes (if mesh evaluation is enabled)
     if (eva_mesh) {
         // Create correspondence mesh if needed
-        shared_ptr<Mesh> correspondence_mesh(new Mesh());
+        shared_ptr <Mesh> correspondence_mesh(new Mesh());
         corresponding_cloud_est->EstimateNormals(geometry::KDTreeSearchParamHybrid(1.0, 30));
 
         // Optional: render mesh by distance error
@@ -456,15 +464,17 @@ void MapEval::saveRegistrationResults() {
         std::cout << "Correspondence Mesh: " << results_subfolder + "correspondence_mesh.ply" << std::endl;
     }
 
-    // Optional: Render the geometry for visualization
-    visualization::DrawGeometries({map_3d_render_raw}, "Error Raw Map Visualization");
-    visualization::DrawGeometries({map_3d_render_inlier}, "Error Correspondence Map Visualization");
+    if (param_.use_visualization) {
+        // Optional: Render the geometry for visualization
+        visualization::DrawGeometries({map_3d_render_raw}, "Error Raw Map Visualization");
+        visualization::DrawGeometries({map_3d_render_inlier}, "Error Correspondence Map Visualization");
+    }
 }
 
 
 template<typename T>
 std::map<std::string, double> MapEval::calculateError(
-        std::vector<T> &result_vec) {
+        std::vector <T> &result_vec) {
     double mean = 0.0;
     double rmse = 0.0;
     for (auto value : result_vec) {
@@ -490,8 +500,8 @@ std::map<std::string, double> MapEval::calculateError(
 }
 
 std::vector<double> MapEval::computePointCloudDistance(
-        std::shared_ptr<PointCloud> &reference_points,
-        std::shared_ptr<PointCloud> &target_points) {
+        std::shared_ptr <PointCloud> &reference_points,
+        std::shared_ptr <PointCloud> &target_points) {
     open3d::geometry::KDTreeFlann kdtree;
     kdtree.SetGeometry(*reference_points);
     int num_neighbors = 1;
@@ -507,9 +517,9 @@ std::vector<double> MapEval::computePointCloudDistance(
     return eval_results;
 }
 
-std::shared_ptr<PointCloud> MapEval::renderDistanceOnPointCloud(
-        std::shared_ptr<PointCloud> &reference_points,
-        std::shared_ptr<PointCloud> &target_points, const double &dis) {
+std::shared_ptr <PointCloud> MapEval::renderDistanceOnPointCloud(
+        std::shared_ptr <PointCloud> &reference_points,
+        std::shared_ptr <PointCloud> &target_points, const double &dis) {
     std::vector<double> eval_dis =
             computePointCloudDistance(reference_points, target_points);
     for (size_t i = 0; i < eval_dis.size(); i++) {
@@ -518,7 +528,7 @@ std::shared_ptr<PointCloud> MapEval::renderDistanceOnPointCloud(
         }
     }
 
-    std::shared_ptr<PointCloud> target_points_render(
+    std::shared_ptr <PointCloud> target_points_render(
             new PointCloud(*target_points));
     target_points_render->PaintUniformColor(Eigen::Vector3d(1, 1, 1));
     open3d::visualization::ColorMapJet colorbar;
@@ -531,8 +541,8 @@ std::shared_ptr<PointCloud> MapEval::renderDistanceOnPointCloud(
 
 
 // 新增：根据MME上色
-std::shared_ptr<open3d::geometry::PointCloud> MapEval::ColorPointCloudByMME(
-        const std::shared_ptr<open3d::geometry::PointCloud> &pointcloud,
+std::shared_ptr <open3d::geometry::PointCloud> MapEval::ColorPointCloudByMME(
+        const std::shared_ptr <open3d::geometry::PointCloud> &pointcloud,
         const std::vector<double> &entropies,
         double mean_entropy) {
     // 创建一个新的点云用于上色
@@ -568,8 +578,8 @@ std::shared_ptr<open3d::geometry::PointCloud> MapEval::ColorPointCloudByMME(
     return colored_pointcloud;
 }
 
-std::shared_ptr<open3d::geometry::PointCloud> MapEval::ColorPointCloudByMME(
-        const std::shared_ptr<open3d::geometry::PointCloud> &pointcloud,
+std::shared_ptr <open3d::geometry::PointCloud> MapEval::ColorPointCloudByMME(
+        const std::shared_ptr <open3d::geometry::PointCloud> &pointcloud,
         const std::vector<double> &entropies,
         double min_abs_entropy, double max_abs_entropy) {
     // 创建一个新的点云用于上色
@@ -607,8 +617,8 @@ std::shared_ptr<open3d::geometry::PointCloud> MapEval::ColorPointCloudByMME(
 }
 
 
-std::shared_ptr<open3d::geometry::PointCloud> MapEval::ColorPointCloudByMME(
-        const std::shared_ptr<open3d::geometry::PointCloud> &pointcloud,
+std::shared_ptr <open3d::geometry::PointCloud> MapEval::ColorPointCloudByMME(
+        const std::shared_ptr <open3d::geometry::PointCloud> &pointcloud,
         const std::vector<double> &entropies) {
 
     // 创建一个新的点云用于上色
@@ -659,14 +669,14 @@ std::shared_ptr<open3d::geometry::PointCloud> MapEval::ColorPointCloudByMME(
     return colored_pointcloud;
 }
 
-std::shared_ptr<Mesh> MapEval::renderDistanceOnMesh(
-        std::shared_ptr<PointCloud> &reference_points,
-        std::shared_ptr<Mesh> &target_mesh,
-        std::shared_ptr<PointCloud> &target_points, double dis) {
+std::shared_ptr <Mesh> MapEval::renderDistanceOnMesh(
+        std::shared_ptr <PointCloud> &reference_points,
+        std::shared_ptr <Mesh> &target_mesh,
+        std::shared_ptr <PointCloud> &target_points, double dis) {
     vector<double> eval_dis =
             computePointCloudDistance(reference_points, target_points);
 
-    std::shared_ptr<Mesh> target_mesh_render(new Mesh(*target_mesh));
+    std::shared_ptr <Mesh> target_mesh_render(new Mesh(*target_mesh));
     target_mesh_render->PaintUniformColor(Eigen::Vector3d(1, 0.7, 0));
     target_mesh_render->ComputeVertexNormals();
     visualization::ColorMapJet colorbar;
@@ -698,11 +708,11 @@ std::shared_ptr<Mesh> MapEval::renderDistanceOnMesh(
     return target_mesh_render;
 }
 
-shared_ptr<Mesh> MapEval::createMeshFromPCD(
-        shared_ptr<PointCloud> &point_cloud, double density_thres, int depth) {
+shared_ptr <Mesh> MapEval::createMeshFromPCD(
+        shared_ptr <PointCloud> &point_cloud, double density_thres, int depth) {
     auto mesh_tuple = Mesh::CreateFromPointCloudPoisson(*point_cloud, depth);
 
-    shared_ptr<Mesh> mesh_ptr = std::get<0>(mesh_tuple);
+    shared_ptr <Mesh> mesh_ptr = std::get<0>(mesh_tuple);
     vector<double> densities_es = std::get<1>(mesh_tuple);
     vector<bool> densities_mask(densities_es.size(), false);
     mesh_ptr->PaintUniformColor({1, 1, 1});
@@ -750,7 +760,7 @@ shared_ptr<Mesh> MapEval::createMeshFromPCD(
 }
 
 void MapEval::getDiffRegResult(
-        std::vector<Vector5d> &result,
+        std::vector <Vector5d> &result,
         pipelines::registration::CorrespondenceSet &points_set,
         geometry::PointCloud &source, geometry::PointCloud &target) {
     vector<double> est_gt_dis(points_set.size(), 0.0);
@@ -821,7 +831,7 @@ void MapEval::getDiffRegResult(
 }
 
 void MapEval::getDiffRegResult(
-        std::vector<Vector5d> &result,
+        std::vector <Vector5d> &result,
         pipelines::registration::CorrespondenceSet &points_set,
         geometry::PointCloud &source, geometry::PointCloud &target,
         Eigen::MatrixXd &source_set, Eigen::MatrixXd &target_set) {
@@ -911,7 +921,7 @@ void MapEval::getDiffRegResult(
     result.push_back(sigma_vec);
 }
 
-void MapEval::getDiffRegResult(std::vector<Vector5d> &result,
+void MapEval::getDiffRegResult(std::vector <Vector5d> &result,
                                pipelines::registration::CorrespondenceSet &points_set,
                                geometry::PointCloud &source,
                                geometry::PointCloud &target,
@@ -991,7 +1001,7 @@ void MapEval::getDiffRegResult(std::vector<Vector5d> &result,
 }
 
 void MapEval::getDiffRegResultWithCorrespondence(
-        std::vector<Vector5d> &result,
+        std::vector <Vector5d> &result,
         pipelines::registration::CorrespondenceSet &points_set,
         geometry::PointCloud &source,
         geometry::PointCloud &target,
@@ -1076,7 +1086,9 @@ void MapEval::calculateMetrics(pipelines::registration::RegistrationResult &regi
     getDiffRegResult(est_gt_results, registration_result.correspondence_set_,
                      *map_3d_, *gt_3d_, *corresponding_cloud_est, *corresponding_cloud_gt);
 
-    std::cout << "INFO: Calculating est-gt metrics took: " << ticToc.toc() / 1000.0 << " [s]" << std::endl;
+    if (param_.enable_debug) {
+        std::cout << "INFO: Calculating est-gt metrics took: " << ticToc.toc() / 1000.0 << " [s]" << std::endl;
+    }
     t_acc = ticToc.toc() / 1000.0;
 
     // Log calculated metrics: RMSE, Mean, Standard deviation, Fitness score
@@ -1115,8 +1127,12 @@ void MapEval::calculateMetrics(pipelines::registration::RegistrationResult &regi
     TicToc ticToc1;
     full_chamfer_dist = computeChamferDistance(*map_3d_, *gt_3d_);
     t_fcd = ticToc1.toc() / 1000.0;
+
     std::cout << "INFO: Full Chamfer distance: " << full_chamfer_dist << std::endl;
-    std::cout << "INFO: Chamfer distance calculation took: " << t_fcd << " [s]" << std::endl;
+
+    if (param_.enable_debug) {
+        std::cout << "INFO: Chamfer distance calculation took: " << t_fcd << " [s]" << std::endl;
+    }
 }
 
 void MapEval::calculateMetricsWithInitialMatrix() {
@@ -1261,7 +1277,7 @@ void MapEval::saveResults() {
 
     // Mesh saving code (for future use)
     if (eva_mesh) {
-        shared_ptr<Mesh> correspondence_mesh(new Mesh());
+        shared_ptr <Mesh> correspondence_mesh(new Mesh());
         corresponding_cloud_est->EstimateNormals(geometry::KDTreeSearchParamHybrid(1.0, 30));
         std::cout << "INFO: Rendering correspondence mesh..." << std::endl;
         open3d::io::WriteTriangleMesh(results_subfolder + "gt_mesh.ply", *gt_mesh);
@@ -1346,7 +1362,7 @@ double MapEval::ComputeEntropy(const Eigen::Matrix3d &covariance) {
 }
 
 double
-MapEval::ComputeMeanMapEntropy(const std::shared_ptr<open3d::geometry::PointCloud> &pointcloud,
+MapEval::ComputeMeanMapEntropy(const std::shared_ptr <open3d::geometry::PointCloud> &pointcloud,
                                std::vector<double> &entropies, double radius) {
     // need a parallel version
     mean_entropy = 0.0;
@@ -1446,7 +1462,7 @@ MapEval::ComputeMeanMapEntropy(const std::shared_ptr<open3d::geometry::PointClou
 
 
 double MapEval::ComputeMeanMapEntropyUsingNormal(
-        const std::shared_ptr<open3d::geometry::PointCloud> &pointcloud,
+        const std::shared_ptr <open3d::geometry::PointCloud> &pointcloud,
         std::vector<double> &entropies,
         double radius) {
     double mean_entropy = 0.0;
@@ -1494,7 +1510,7 @@ double MapEval::ComputeMeanMapEntropyUsingNormal(
         ++processed_points;
         if (processed_points % 1000000 == 0) {
             auto now = std::chrono::steady_clock::now();
-            auto elapsed = std::chrono::duration_cast<std::chrono::duration<double>>(now - start_time).count();
+            auto elapsed = std::chrono::duration_cast < std::chrono::duration < double >> (now - start_time).count();
             double average_time_per_point = elapsed / processed_points;
             int points_remaining = total_points - processed_points;
             double estimated_time_remaining = average_time_per_point * points_remaining;
@@ -1521,7 +1537,7 @@ void MapEval::StartProcessing(int total) {
     total_points = total;
 }
 
-void MapEval::addGaussianNoise(std::shared_ptr<open3d::geometry::PointCloud> &cloud,
+void MapEval::addGaussianNoise(std::shared_ptr <open3d::geometry::PointCloud> &cloud,
                                double noise_std_dev) {
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -1533,14 +1549,14 @@ void MapEval::addGaussianNoise(std::shared_ptr<open3d::geometry::PointCloud> &cl
     }
 }
 
-void MapEval::addNonUniformDensity(std::shared_ptr<open3d::geometry::PointCloud> &cloud,
+void MapEval::addNonUniformDensity(std::shared_ptr <open3d::geometry::PointCloud> &cloud,
                                    double sparse_ratio,
                                    double dense_ratio,
                                    double region_size) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<double> dist(0.0, 1.0);
-    std::vector<Eigen::Vector3d> new_points;
+    std::vector <Eigen::Vector3d> new_points;
     // 遍历所有点
     for (const auto &point : cloud->points_) {
         // 基于点的位置决定是否保留
@@ -1562,7 +1578,7 @@ void MapEval::addNonUniformDensity(std::shared_ptr<open3d::geometry::PointCloud>
     cloud->points_ = new_points;
 }
 
-void MapEval::addSparseOutliers(std::shared_ptr<open3d::geometry::PointCloud> &cloud,
+void MapEval::addSparseOutliers(std::shared_ptr <open3d::geometry::PointCloud> &cloud,
                                 double outlier_ratio,
                                 double outlier_range) {
     std::random_device rd;
@@ -1584,7 +1600,7 @@ void MapEval::addSparseOutliers(std::shared_ptr<open3d::geometry::PointCloud> &c
     }
 }
 
-void MapEval::addLocalDeformation(std::shared_ptr<open3d::geometry::PointCloud> &cloud,
+void MapEval::addLocalDeformation(std::shared_ptr <open3d::geometry::PointCloud> &cloud,
                                   double deform_radius,
                                   double deform_strength,
                                   Eigen::Vector3d center) {

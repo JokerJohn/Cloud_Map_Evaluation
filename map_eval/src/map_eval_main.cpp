@@ -21,42 +21,100 @@
 #include <filesystem>
 #include <yaml-cpp/yaml.h>
 
+// 从YAML文件加载参数的函数
+Param loadParametersFromYAML(const std::string& yaml_file_path) {
+    try {
+        // 加载YAML配置文件
+        YAML::Node config = YAML::LoadFile(yaml_file_path);
+
+        // 创建默认的Param对象
+        Param param;
+
+        // 设置基本参数
+        param.evaluation_method_ = config["registration_methods"].as<int>();
+        param.icp_max_distance_ = config["icp_max_distance"].as<double>();
+
+        // 设置精度级别向量
+        if (config["accuracy_level"] && config["accuracy_level"].size() >= 5) {
+            for (int i = 0; i < 5; ++i) {
+                param.trunc_dist_[i] = config["accuracy_level"][i].as<double>();
+            }
+        }
+
+        // 设置初始变换矩阵
+        if (config["initial_matrix"] && config["initial_matrix"].size() >= 4) {
+            for (int i = 0; i < 4; ++i) {
+                for (int j = 0; j < 4; ++j) {
+                    param.initial_matrix_(i, j) = config["initial_matrix"][i][j].as<double>();
+                }
+            }
+        }
+
+        // 设置布尔参数
+        param.save_immediate_result_ = config["save_immediate_result"].as<bool>();
+        param.evaluate_mme_ = config["evaluate_mme"].as<bool>();
+        param.evaluate_gt_mme_ = config["evaluate_gt_mme"].as<bool>();
+        param.evaluate_using_initial_ = config["evaluate_using_initial"].as<bool>();
+
+        // 设置数值参数
+        param.nn_radius_ = config["nn_radius"].as<double>();
+        param.vmd_voxel_size_ = config["vmd_voxel_size"].as<double>();
+        param.downsample_size = config["downsample_size"].as<double>();
+
+        // 设置路径参数
+        param.evaluation_map_pcd_path_ = config["estimate_map_path"].as<std::string>();
+        param.map_gt_path_ = config["gt_map_path"].as<std::string>();
+        param.name_ = config["scene_name"].as<std::string>();
+
+        // 确保路径以'/'结尾
+        if (!param.evaluation_map_pcd_path_.empty() && param.evaluation_map_pcd_path_.back() != '/') {
+            param.evaluation_map_pcd_path_ += '/';
+        }
+
+        // 构建结果路径
+        param.result_path_ = param.evaluation_map_pcd_path_ + "map_results/";
+
+        // 设置可选参数（如果存在）
+        if (config["pcd_file_name"]) {
+            param.pcd_file_name_ = config["pcd_file_name"].as<std::string>();
+        }
+
+        if (config["evaluate_noised_gt"]) {
+            param.evaluate_noised_gt_ = config["evaluate_noised_gt"].as<bool>();
+        }
+
+        if (config["noise_std_dev"]) {
+            param.noise_std_dev_ = config["noise_std_dev"].as<double>();
+        }
+
+        if (config["voxel_size"]) {
+            param.voxel_size_ = config["voxel_size"].as<double>();
+        }
+
+        if (config["use_visualization"]) {
+            param.use_visualization = config["use_visualization"].as<bool>();
+        }
+        param.enable_debug = config["enable_debug"].as<bool>();
+
+
+        return param;
+
+    } catch (const YAML::Exception& e) {
+        std::cerr << "YAML parsing error: " << e.what() << std::endl;
+        throw std::runtime_error("Failed to parse YAML file: " + yaml_file_path);
+    } catch (const std::exception& e) {
+        std::cerr << "Error loading parameters: " << e.what() << std::endl;
+        throw;
+    }
+}
+
+
 int main(int argc, char **argv) {
     std::cout << "Current working directory: " << std::filesystem::current_path() << std::endl;
 
-    // load all the yaml parameters
-    YAML::Node config = YAML::LoadFile("../config/config.yaml");
-    int method = config["registration_methods"].as<int>();
-    double icp_max_distance = config["icp_max_distance"].as<double>();
+    std::string config_file = "../config/config.yaml";
+    Param param =  loadParametersFromYAML(config_file);
 
-    Vector5d accuracy_level = Vector5d::Zero();
-    for (int i = 0; i < 5; ++i) {
-        accuracy_level[i] = config["accuracy_level"][i].as<double>();
-    }
-    Eigen::Matrix4d initial_matrix = Eigen::Matrix4d::Zero();
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            initial_matrix(i, j) = config["initial_matrix"][i][j].as<double>();
-        }
-    }
-    // load all the settings
-    bool save_immediate_result = config["save_immediate_result"].as<bool>();
-    bool evaluate_mme = config["evaluate_mme"].as<bool>();
-    bool evaluate_gt_mme = config["evaluate_gt_mme"].as<bool>();
-    bool evaluate_using_initial_ = config["evaluate_using_initial"].as<bool>();
-    double nn_radius = config["nn_radius"].as<double>();
-    double vmd_voxel_size = config["vmd_voxel_size"].as<double>();
-
-    // the path dir must end with '/'
-    std::string est_path, gt_path, results_path, scene_name;
-    est_path = config["estimate_map_path"].as<std::string>();
-    gt_path = config["gt_map_path"].as<std::string>();
-    scene_name = config["scene_name"].as<std::string>();
-    results_path = est_path + "map_results/";
-    std::string pcd_file_name = "map.pcd";
-
-    Param param(est_path, gt_path, results_path, initial_matrix, scene_name, method, icp_max_distance, accuracy_level, 
-         save_immediate_result, evaluate_mme, evaluate_gt_mme, pcd_file_name, evaluate_using_initial_,  false, 0.01, nn_radius, vmd_voxel_size);
     MapEval map_eval(param);
     map_eval.process();
 

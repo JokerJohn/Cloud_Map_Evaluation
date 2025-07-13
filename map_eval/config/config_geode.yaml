@@ -18,15 +18,15 @@ initial_matrix:
 
 # estimate map folder path, end with "/", make sure your estimate point cloud and map is renamed as "map.pcd"
 # results path will also in the same folder:  estimate_map_path + "map_results"
-estimate_map_path: /home/xchu/data/ltloc_result/parkinglot_raw_3_0.5/
+estimate_map_path: /home/xchu/data/ltloc_result/stair_bob_all/stairs_bob_fcn_sr/
 
 # ground truth map file path
 # note that we support ".pcd" or ".ply" format for ground truth map loading
-gt_map_path: /media/xchu/e81eaf80-d92c-413a-a503-1c9b35b19963/home/xchu/data/evaluation/est_file/redbird_02/hkustgz_gt_filter.pcd
+gt_map_path: /media/xchu/新加卷/GEODE/gt_map.pcd
 
 
 # scene name, not important, just for batch processing for a series of scenes
-scene_name: redbird_02
+scene_name: stairs
 
 # other settings
 # if we save the immediate result to a text file
@@ -57,7 +57,7 @@ evaluate_noise_gt: false
 
 # vmd voxel size
 # outdoor: 2.0-4.0; indoor: 2.0-3.0
-vmd_voxel_size: 3.0
+vmd_voxel_size: 2.0
 
 # downsample size for estimated and gt point cloud map
 downsample_size: 0.01

@@ -4,6 +4,9 @@ project(map_eval)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_BUILD_TYPE Release)
 
+set(Open3D_DIR "/home/xchu/xicp_ws/devel/.private/open3d_catkin/lib/cmake/Open3D")
+message(STATUS "LTLoc: Set Open3D_DIR to ${Open3D_DIR}") # 打印信息，确认设置生效
+
 find_package(Open3D REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(OpenMP REQUIRED)
