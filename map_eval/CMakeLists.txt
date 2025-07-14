@@ -13,6 +13,14 @@ find_package(OpenMP REQUIRED)
 find_package(PCL REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
+message(STATUS "yaml-cpp library: ${YAML_CPP_LIBRARY}")
+message(STATUS "yaml-cpp include: ${YAML_CPP_INCLUDE_DIR}")
+# 打印信息用于调试
+message(STATUS "Open3D include dirs: ${Open3D_INCLUDE_DIRS}")
+message(STATUS "Open3D libraries: ${Open3D_LIBRARIES}")
+message(STATUS "Eigen3 include dir: ${EIGEN3_INCLUDE_DIR}")
+
+
 include_directories(
         include
         ${Open3D_INCLUDE_DIRS}
@@ -22,7 +30,9 @@ include_directories(
 )
 
 add_executable(map_eval src/map_eval.cpp src/map_eval_main.cpp src/voxel_calculator.cpp)
-target_link_libraries(map_eval ${Open3D_LIBRARIES} ${PCL_LIBRARIES}  ${YAML_CPP_LIBRARIES})
+target_link_libraries(map_eval ${Open3D_LIBRARIES} ${PCL_LIBRARIES}  ${YAML_CPP_LIBRARY})
+
+
 
 # If OpenMP is found, add the flags for OpenMP
 if(OpenMP_CXX_FOUND)
