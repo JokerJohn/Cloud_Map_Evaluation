@@ -1,60 +1,66 @@
 <div align="center">
 
-<h1>MapEval: Towards Unified, Robust and Efficient SLAM Map Evaluation Framework</h1>
+# MapEval: Towards Unified, Robust and Efficient SLAM Map Evaluation Framework
 
-[**Xiangcheng Hu**](https://github.com/JokerJohn)<sup>1</sup> · [**Jin Wu**](https://zarathustr.github.io/)<sup>1</sup> · [**Mingkai  Jia**](https://github.com/MKJia)<sup>1</sup>· [**Hongyu  Yan**](https://scholar.google.com/citations?user=TeKnXhkAAAAJ&hl=zh-CN)<sup>1</sup>· [**Yi  Jiang**](https://yijiang1992.github.io/)<sup>2</sup>· [**Binqian  Jiang**](https://github.com/lewisjiang/)<sup>1</sup>
+[**Xiangcheng Hu**](https://github.com/JokerJohn)<sup>1</sup> · [**Jin Wu**](https://zarathustr.github.io/)<sup>1</sup> · [**Mingkai Jia**](https://github.com/MKJia)<sup>1</sup> · [**Hongyu Yan**](https://scholar.google.com/citations?user=TeKnXhkAAAAJ&hl=zh-CN)<sup>1</sup> · [**Yi Jiang**](https://yijiang1992.github.io/)<sup>2</sup> · [**Binqian Jiang**](https://github.com/lewisjiang/)<sup>1</sup>
 <br>
-[**Wei Zhang**](https://ece.hkust.edu.hk/eeweiz)<sup>1</sup> · [**Wei  He**](https://sites.google.com/view/drweihecv/home/)<sup>3</sup> · [**Ping Tan**](https://facultyprofiles.hkust.edu.hk/profiles.php?profile=ping-tan-pingtan#publications)<sup>1*&dagger;</sup>
+[**Wei Zhang**](https://ece.hkust.edu.hk/eeweiz)<sup>1</sup> · [**Wei He**](https://sites.google.com/view/drweihecv/home/)<sup>3</sup> · [**Ping Tan**](https://facultyprofiles.hkust.edu.hk/profiles.php?profile=ping-tan-pingtan#publications)<sup>1*
 
-<sup>1</sup>**HKUST&emsp;&emsp;&emsp;<sup>2</sup>CityU&emsp;&emsp;&emsp;<sup>3</sup>USTB**  
+†</sup>
+
+<sup>1</sup>**HKUST** &emsp;&emsp;&emsp; <sup>2</sup>**CityU** &emsp;&emsp;&emsp; <sup>3</sup>**USTB**  
 <br>
-&dagger;Project lead&emsp;*Corresponding Author
+†Project Lead &emsp; *Corresponding Author
 
-<a href="https://ieeexplore.ieee.org/document/10910156"><img src='https://img.shields.io/badge/RAL 2025- MapEval -red' alt='Paper PDF'></a>[![GitHub Stars](https://img.shields.io/github/stars/JokerJohn/Cloud_Map_Evaluation.svg)](https://github.com/JokerJohn/Cloud_Map_Evaluation/stargazers)<a href="https://github.com/JokerJohn/PALoc/network/members">
-<img alt="FORK" src="https://img.shields.io/github/forks/JokerJohn/Cloud_Map_Evaluation?color=white" />
-</a> <a ><img alt="PRs-Welcome" src="https://img.shields.io/badge/PRs-Welcome-white" /></a>[![GitHub Issues](https://img.shields.io/github/issues/JokerJohn/Cloud_Map_Evaluation.svg)](https://github.com/JokerJohn/Cloud_Map_Evaluation/issues)[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+<a href="https://ieeexplore.ieee.org/document/10910156"><img src='https://img.shields.io/badge/IEEE%20RAL%202025-MapEval-red' alt='Paper PDF'></a>[![GitHub Stars](https://img.shields.io/github/stars/JokerJohn/Cloud_Map_Evaluation.svg)](https://github.com/JokerJohn/Cloud_Map_Evaluation/stargazers)<a href="https://github.com/JokerJohn/Cloud_Map_Evaluation/network/members">
+<img alt="GitHub Forks" src="https://img.shields.io/github/forks/JokerJohn/Cloud_Map_Evaluation?color=white" />
+</a><a href="https://github.com/JokerJohn/Cloud_Map_Evaluation/pulls">
+<img alt="PRs Welcome" src="https://img.shields.io/badge/PRs-Welcome-white" />
+</a>[![GitHub Issues](https://img.shields.io/github/issues/JokerJohn/Cloud_Map_Evaluation.svg)](https://github.com/JokerJohn/Cloud_Map_Evaluation/issues)[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 </div>
 
-![image-20241127080805642](./README/image-20241127080805642.png)
+![MapEval Framework Overview](./README/image-20241127080805642.png)
 
+## Overview
 
 MapEval is a comprehensive framework for evaluating point cloud maps in SLAM systems, addressing two fundamentally distinct aspects of map quality assessment:
+
 1. **Global Geometric Accuracy**: Measures the absolute geometric fidelity of the reconstructed map compared to ground truth. This aspect is crucial as SLAM systems often accumulate drift over long trajectories, leading to global deformation.
+
 2. **Local Structural Consistency**: Evaluates the preservation of local geometric features and structural relationships, which is essential for tasks like obstacle avoidance and local planning, even when global accuracy may be compromised.
 
 These complementary aspects require different evaluation approaches, as global drift may exist despite excellent local reconstruction, or conversely, good global alignment might mask local inconsistencies. Our framework provides a unified solution through both traditional metrics and novel evaluation methods based on optimal transport theory.
 
 ## News
 
-- **2025/07/06:** Use tbb to accerlerate mme caculation, update the parameter setting and more config examples.
-- **2025/05/05:** Add new test data and remove the simulation codes.
-- **2025/03/05**: [Formally published](https://ieeexplore.ieee.org/document/10910156)!
-- **2025/02/25**: Accept!
-- **2025/02/12**: Codes released! 
-- **2025/02/05**: Resubmit.
-- **2024/12/19**: Submitted to **IEEE RAL**! 
+- **2025/07/06:** Use TBB to accelerate MME calculation, update parameter settings and add more configuration examples.
+- **2025/05/05:** Add new test data and remove simulation codes.
+- **2025/03/05:** [Formally published](https://ieeexplore.ieee.org/document/10910156) in IEEE RAL!
+- **2025/02/25:** Paper accepted!
+- **2025/02/12:** Source code released! 
+- **2025/02/05:** Paper resubmitted.
+- **2024/12/19:** Paper submitted to **IEEE RAL**! 
 
 ## Key Features
 
-**Traditional Metrics Implementation**:
+### Traditional Metrics Implementation
 
-- **Accuracy** (AC): Point-level geometric error assessment
-- **Completeness** (COM): Map coverage evaluation.
-- **Chamfer Distance** (CD): Bidirectional point cloud difference
-- **Mean Map Entropy** (MME): Information-theoretic local consistency metric
+- **Accuracy (AC)**: Point-level geometric error assessment
+- **Completeness (COM)**: Map coverage evaluation
+- **Chamfer Distance (CD)**: Bidirectional point cloud difference
+- **Mean Map Entropy (MME)**: Information-theoretic local consistency metric
 
-**Novel Proposed Metrics**:
+### Novel Proposed Metrics
 
-- **Average Wasserstein Distance** (AWD): Robust global geometric accuracy assessment
-- **Spatial Consistency Score** (SCS): Enhanced local consistency evaluation
+- **Average Wasserstein Distance (AWD)**: Robust global geometric accuracy assessment
+- **Spatial Consistency Score (SCS)**: Enhanced local consistency evaluation
 
-| ![image-20250304121753995](./README/image-20250304121753995.png) |
-| ------------------------------------------------------------ |
+![Evaluation Metrics Illustration](./README/image-20250304121753995.png)
 
-## Results
+## Experimental Results
 
-### Simulated experiments
+### Simulation Experiments
 
 | Noise Sensitivity                                            | Outlier Robustness                                           |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -62,7 +68,7 @@ These complementary aspects require different evaluation approaches, as global d
 
 ![image-20241127083707943](./README/image-20241127083707943.png)
 
-### Real-world experiments
+### Real-World Experiments
 
 | Map Evaluation via Localization Accuracy                     | Map Evaluation in Diverse Environments                       |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -71,41 +77,51 @@ These complementary aspects require different evaluation approaches, as global d
 | ![image-20241129092052634](./README/image-20241129092052634.png) |
 | ------------------------------------------------------------ |
 
-##  Efficiency and Parameter Analysis
+### Efficiency and Parameter Analysis
 
 | ![image-20250322192323830](./README/image-20250322192323830.png) | ![image-20250322192349614](./README/image-20250322192349614.png) |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 
 ## Datasets
 
-| [MS-dataset](https://github.com/JokerJohn/MS-Dataset) | [FusionPortable (FP) and FusionPortableV2 dataset](https://fusionportable.github.io/dataset/fusionportable_v2/) | [Newer College (NC)](https://ori-drs.github.io/newer-college-dataset/) | [ GEODE dataset (GE)](https://github.com/PengYu-Team/GEODE_dataset) |
-| ----------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+The following datasets are supported and used for evaluation:
+
+| Dataset | Description |
+|---------|-------------|
+| [MS-Dataset](https://github.com/JokerJohn/MS-Dataset) | Multi-session mapping dataset |
+| [FusionPortable (FP) and FusionPortableV2](https://fusionportable.github.io/dataset/fusionportable_v2/) | Multi-sensor fusion dataset |
+| [Newer College (NC)](https://ori-drs.github.io/newer-college-dataset/) | Outdoor autonomous navigation dataset |
+| [GEODE Dataset (GE)](https://github.com/PengYu-Team/GEODE_dataset) | Ground truth evaluation dataset |
 
 | ![image-20250322192302315](./README/image-20250322192302315.png) |
 | ------------------------------------------------------------ |
 
 
 
-## Quickly Run
+## Quick Start
 
 ### Dependencies
 
-- *[Open3d ( >= 0.11)](https://github.com/isl-org/Open3D)* 
+- [Open3D (>= 0.11)](https://github.com/isl-org/Open3D)
 - Eigen3
 - yaml-cpp
-- Tbb
+- TBB (Threading Building Blocks)
 - Ubuntu 20.04
 
-### Test Data(password: 1)
+### Test Data
 
-| sequence |                                                              | Test PCD                                                     | GT PCD                                                       |
-| -------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| MCR_slow | ![image-20250515145431522](./README/image-20250515145431522.png) | [map.pcd](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/ES9eSANEr-9NvkFqMzMFsecBo5r3hBpBnj0c6BMPgsfXnQ?e=aijdPf) | [map_gt.pcd](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/ESfn5EEsiPlCiJcydVc_HqgBDGqy65MHoyu63XE-iKbFBQ?e=dTDon4) |
-| PK01     | ![image-20250515144915631](./README/image-20250515144915631.png) | [map.pcd](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/ERPFVJN6CtBKtHlPWyni-jIB0dgLzgF1FGxPTatKoCp02Q?e=TEgfBp) | [gt.pcd](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/EeztnFHwKJlCoW-fmKljaMMBSvNvT5BkTXxoA1iXqeUS5A?e=37evMi) |
+Download the test data using password: `1`
 
-### Usage
+| Sequence | Preview | Test PCD | Ground Truth PCD |
+|----------|---------|----------|-----------------|
+| MCR_slow | ![MCR_slow Preview](./README/image-20250515145431522.png) | [map.pcd](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/ES9eSANEr-9NvkFqMzMFsecBo5r3hBpBnj0c6BMPgsfXnQ?e=aijdPf) | [map_gt.pcd](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/ESfn5EEsiPlCiJcydVc_HqgBDGqy65MHoyu63XE-iKbFBQ?e=dTDon4) |
+| PK01     | ![PK01 Preview](./README/image-20250515144915631.png) | [map.pcd](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/ERPFVJN6CtBKtHlPWyni-jIB0dgLzgF1FGxPTatKoCp02Q?e=TEgfBp) | [gt.pcd](https://hkustconnect-my.sharepoint.com/:u:/g/personal/xhubd_connect_ust_hk/EeztnFHwKJlCoW-fmKljaMMBSvNvT5BkTXxoA1iXqeUS5A?e=37evMi) |
 
-1. install open3d. (maybe a higer version of CMake is needed)
+### Installation and Usage
+
+#### 1. Install Open3D
+
+Note: A higher version of CMake may be required.
 
 ```bash
 git clone https://github.com/isl-org/Open3D.git
@@ -114,117 +130,141 @@ cmake ..
 make install
 ```
 
-2. set and read the instruction of some params in [config.yaml](map_eval/config/config.yaml).
+#### 2. Configure Parameters
+
+Set and review the parameters in [config.yaml](map_eval/config/config.yaml):
 
 ```yaml
-# accuracy_level, vector5d, we mainly use the result of the first element
-# if inlier is very small, we can try to larger the value, e.g. for outdoors, [0.5, 0.3, 0.2, 0.1, 0.05]
+# accuracy_level: vector5d, we mainly use the result of the first element
+# For small inlier ratios, try larger values, e.g., for outdoors: [0.5, 0.3, 0.2, 0.1, 0.05]
 accuracy_level: [0.2, 0.1, 0.08, 0.05, 0.01]
 
-# initial_matrix, vector16d, the initial matrix of the registration
-# make sure the format is correct, or you will got the error log: YAML::BadSubscript' what():  operator[] call on a scalar
+# initial_matrix: vector16d, the initial transformation matrix for registration
+# Ensure correct format to avoid YAML::BadSubscript errors
 initial_matrix:
   - [1.0, 0.0, 0.0, 0.0]
   - [0.0, 1.0, 0.0, 0.0]
   - [0.0, 0.0, 1.0, 0.0]
   - [0.0, 0.0, 0.0, 1.0]
   
-# vmd voxel size, outdoor: 2.0-4.0; indoor: 2.0-3.0
+# vmd_voxel_size: outdoor: 2.0-4.0; indoor: 2.0-3.0
 vmd_voxel_size: 3.0
 ```
 
-
-3. complie map_eval
+#### 3. Compile MapEval
 
 ```bash
 git clone https://github.com/JokerJohn/Cloud_Map_Evaluation.git
-cd Cloud_Map_Evaluation/map_eval && mkdir build
+cd Cloud_Map_Evaluation/map_eval && mkdir build && cd build
 cmake ..
 make
 ```
 
-4. get the final results
+#### 4. Run Evaluation
 
 ```bash
 ./map_eval
 ```
 
-we have a point cloud map generated by a pose-slam system, and we have a ground truth point cloud map. Then we caculate related metrics.
+This evaluates a point cloud map generated by a SLAM system against a ground truth point cloud map and calculates related metrics.
 
-![image-20250214100110872](./README/image-20250214100110872.png)
+![Evaluation Results](./README/image-20250214100110872.png)
 
-### Visulization
+### Visualization
 
-We can also get a rendered raw distance-error map(10cm) and inlier distance-error map(2cm) in this process, the color R->G->B represent for the distance error at a level of 0-10cm.
+#### Error Visualization
 
-![image (4)](./README/image%20(4).png)
+The framework generates rendered distance-error maps with color coding:
+- **Raw distance-error map (10cm)**: Shows error for all points
+- **Inlier distance-error map (2cm)**: Shows error for matched points only
+- **Color scheme**: R→G→B represents distance error levels from 0-10cm
 
-**if we do not have gt ma**p, we can only evaluate the **Mean Map Entropy (MME)**, smaller means better consistency. just set `evaluate_mme: false` in **[config.yaml](map_eval/config/config.yaml)**.
+![Error Visualization](./README/image%20(4).png)
 
-![image (5)](./README/image%20(5).png)
+#### Evaluation Without Ground Truth
 
-we can also get a simpe mesh reconstructed from point cloud map.
+If ground truth is not available, only **Mean Map Entropy (MME)** can be evaluated. Lower values indicate better consistency. Set `evaluate_mme: false` in [config.yaml](map_eval/config/config.yaml).
 
-![image-20230101200651976](README/image-20230101200651976.png)
+![MME Evaluation](./README/image%20(5).png)
 
-5. we got the result flies.
+#### Mesh Reconstruction
 
-![image-20250212202446474](./README/image-20250212202446474.png)
+A simple mesh can be reconstructed from the point cloud map:
 
-6. if you want to get the visulization of voxel errors, use the  [error-visualization.py](map_eval/scripts/error-visualization.py) 
+![Mesh Reconstruction](README/image-20230101200651976.png)
 
-   ```python
-   pip install numpy matplotlib scipy
-   
-   python3 error-visualization.py
-   ```
+#### 5. Output Files
 
-   | ![image-20250212202920950](./README/image-20250212202920950.png) | ![image-20250212202933255](./README/image-20250212202933255.png) |
-   | ------------------------------------------------------------ | ------------------------------------------------------------ |
-   | ![image-20250212203009074](./README/image-20250212203009074.png) | ![image-20250212203025149](./README/image-20250212203025149.png) |
+The evaluation generates the following result files:
 
-## Issues
+![Output Files](./README/image-20250212202446474.png)
 
-### How do you get your initial pose?
+#### 6. Voxel Error Visualization
 
-we can use [CloudCompare](https://github.com/CloudCompare/CloudCompare) to align LIO map to Gt map .
+For detailed voxel error visualization, use [error-visualization.py](map_eval/scripts/error-visualization.py):
 
-- Roughly  translate and rotate the LIO point cloud map to the GT map。
+```bash
+pip install numpy matplotlib scipy
+python3 error-visualization.py
+```
 
-- Manually register the moved LIO map (aligned) to the GT map (reference), and get the output of the terminal transfrom `T2`, then the initial pose matrix is the terminal output transform `T`.
+| ![Voxel Error 1](./README/image-20250212202920950.png) | ![Voxel Error 2](./README/image-20250212202933255.png) |
+|-------------------------------------------------------|-------------------------------------------------------|
+| ![Voxel Error 3](./README/image-20250212203009074.png) | ![Voxel Error 4](./README/image-20250212203025149.png) |
 
-| ![image-20230106135937336](README/image-20230106135937336.png) | ![image-20230106140017020](README/image-20230106140017020.png) |
-| ------------------------------------------------------------ | ------------------------------------------------------------ |
+## Frequently Asked Questions
 
-### What's the difference between raw rendered map and inlier rendered map? 
+### How to Obtain Initial Pose?
 
-The primary function of the r**aw rendered map** (left) is to color-code the error of all points in the map estimated by the algorithm. For each point in the estimated map that does not find a corresponding point in the **ground truth (gt) map**, it is defaulted to the maximum error (**20cm**), represented as red. On the other hand, the i**nlier rendered map** (right) excludes the non-overlapping regions of the point cloud and colors only the error of the inlier points after point cloud matching. This map therefore contains only a portion of the points from the original estimated map. (remindered by [John-Henawy](https://github.com/John-Henawy) in [issue 5](https://github.com/JokerJohn/Cloud_Map_Evaluation/issues/5))
+Use [CloudCompare](https://github.com/CloudCompare/CloudCompare) to align the LiDAR-Inertial Odometry (LIO) map to the ground truth map:
 
-![image (6)](./README/image%20(6).png)
+1. Roughly translate and rotate the LIO point cloud map to align with the GT map
+2. Manually register the moved LIO map (aligned) to the GT map (reference)
+3. Extract the terminal transform output `T` as the initial pose matrix
 
-### **Applicable Scenarios:**
+| ![CloudCompare Alignment 1](README/image-20230106135937336.png) | ![CloudCompare Alignment 2](README/image-20230106140017020.png) |
+|----------------------------------------------------------------|----------------------------------------------------------------|
 
-1. **With a ground truth map:** All metrics are applicable.
+### Difference Between Raw and Inlier Rendered Maps
 
-2. **Without a ground truth map** (remindered by [@Silentbarber](https://github.com/Silentbarber), [ZOUYIyi](https://github.com/ZOUYIyi) in [issue 4](https://github.com/JokerJohn/Cloud_Map_Evaluation/issues/4) and [issue 7](https://github.com/JokerJohn/Cloud_Map_Evaluation/issues/7)):
+- **Raw rendered map** (left): Color-codes error for all points in the estimated map. Points without correspondences in the ground truth map are assigned maximum error (20cm) and rendered in red.
 
-    - Only **MME** can be used for evaluation. It is crucial to remember that the maps being evaluated must be on the same scale. 
+- **Inlier rendered map** (right): Excludes non-overlapping regions and colors only inlier points after point cloud matching. Contains only a subset of the original estimated map points.
 
-      > For example, **you cannot compare a LIO map with a LIO SLAM map** that has performed loop closure optimization. This is because loop closure adjusts the local point cloud structure, leading to inaccurate MME evaluation. You can compare the MME of different LIO maps.
+*Credit: [John-Henawy](https://github.com/John-Henawy) in [issue #5](https://github.com/JokerJohn/Cloud_Map_Evaluation/issues/5)*
 
-## Publications
+![Raw vs Inlier Maps](./README/image%20(6).png)
 
-We recommend to cite [our paper](https://arxiv.org/abs/2411.17928) if you find this library useful:
+### Applicable Scenarios
 
-```latex
-@misc{hu2024mapeval,
-      title={MapEval: Towards Unified, Robust and Efficient SLAM Map Evaluation Framework}, 
-      author={Xiangcheng Hu and Jin Wu and Mingkai Jia and Hongyu Yan and Yi Jiang and Binqian Jiang and Wei Zhang and Wei He and Ping Tan},
-      year={2025},
-      volume={10},
-      number={5},
-      pages={4228-4235},
-  	  doi={10.1109/LRA.2025.3548441}
+#### 1. With Ground Truth Map
+All metrics (AC, COM, CD, MME, AWD, SCS) are applicable.
+
+#### 2. Without Ground Truth Map
+Only **Mean Map Entropy (MME)** can be used for evaluation. 
+
+**Important considerations:**
+- Maps must be on the same scale
+- Cannot compare LIO maps with LIO SLAM maps that have undergone loop closure optimization
+- Loop closure modifies local point cloud structure, leading to inaccurate MME evaluation
+- Can compare MME between different LIO maps
+
+*Credit: [@Silentbarber](https://github.com/Silentbarber), [ZOUYIyi](https://github.com/ZOUYIyi) in [issue #4](https://github.com/JokerJohn/Cloud_Map_Evaluation/issues/4) and [issue #7](https://github.com/JokerJohn/Cloud_Map_Evaluation/issues/7)*
+
+## Citation
+
+If you find this work useful for your research, please cite our paper:
+
+```bibtex
+@article{hu2025mapeval,
+  title={MapEval: Towards Unified, Robust and Efficient SLAM Map Evaluation Framework}, 
+  author={Xiangcheng Hu and Jin Wu and Mingkai Jia and Hongyu Yan and Yi Jiang and Binqian Jiang and Wei Zhang and Wei He and Ping Tan},
+  journal={IEEE Robotics and Automation Letters},
+  year={2025},
+  volume={10},
+  number={5},
+  pages={4228-4235},
+  doi={10.1109/LRA.2025.3548441}
 }
 
 @article{wei2024fpv2,
@@ -237,28 +277,34 @@ We recommend to cite [our paper](https://arxiv.org/abs/2411.17928) if you find t
 }
 ```
 
-## Related Package
+## Related Works
 
-The folloing works use MapEval for map evalution.
+The following research works have utilized MapEval for map evaluation:
 
-| Work                                                         | Tasks                                    | Date       | Metrics   | Demo                                                         |
-| ------------------------------------------------------------ | ---------------------------------------- | ---------- | --------- | ------------------------------------------------------------ |
-| [**LEMON-Mapping**](https://arxiv.org/abs/2505.10018)        | Multi-Session Point Cloud mapping        | Arxiv'2025 | MME       | ![image-20250517201051378](./README/image-20250517201051378.png) |
-| **[CompSLAM](https://arxiv.org/abs/2505.06483)**             | Multi-Modal Localization<br/>and Mapping | Arxiv'2025 | AWD/SCS   | ![image-20250513202215918](./README/image-20250513202215918.png) |
-| [**GEODE**](https://github.com/PengYu-Team/GEODE_dataset)    | SLAM Dataset                             | IJRR'2025  |           | ![image-20250513204209752](./README/image-20250513204209752.png) |
-| [**ELite**](https://github.com/dongjae0107/ELite)            | LiDAR-based Lifelong Mapping             | ICRA'2025  | AC/CD     | ![image-20250513202654237](./README/image-20250513202654237.png) |
-| [**PALoc**](https://github.com/JokerJohn/PALoc)              | Prior-Assisted 6-DoF Localization        | TMECH'2024 | AC/CD     | ![image-20250513205043100](./README/image-20250513205043100.png) |
-| [**MS-Mapping**](https://github.com/JokerJohn/MS-Mapping)    | Multi-session LiDAR mapping              | Arxiv'2024 | AC/CD/MME | ![image-20240730152951528](./README/image-20240730152951528.png) |
-| [**FusionPortableV2**](https://journals.sagepub.com/doi/full/10.1177/02783649241303525) | SLAM Dataset                             | IJRR'2024  | COM/CD    | ![img](./README/10.1177_02783649241303525-fig15.jpg)         |
-
-
+| Work | Description | Publication | Metrics Used | Preview |
+|------|-------------|-------------|--------------|---------|
+| [**LEMON-Mapping**](https://arxiv.org/abs/2505.10018) | Multi-Session Point Cloud Mapping | arXiv 2025 | MME | ![LEMON-Mapping](./README/image-20250517201051378.png) |
+| [**CompSLAM**](https://arxiv.org/abs/2505.06483) | Multi-Modal Localization and Mapping | arXiv 2025 | AWD/SCS | ![CompSLAM](./README/image-20250513202215918.png) |
+| [**GEODE**](https://github.com/PengYu-Team/GEODE_dataset) | SLAM Dataset | IJRR 2025 | - | ![GEODE](./README/image-20250513204209752.png) |
+| [**ELite**](https://github.com/dongjae0107/ELite) | LiDAR-based Lifelong Mapping | ICRA 2025 | AC/CD | ![ELite](./README/image-20250513202654237.png) |
+| [**PALoc**](https://github.com/JokerJohn/PALoc) | Prior-Assisted 6-DoF Localization | T-MECH 2024 | AC/CD | ![PALoc](./README/image-20250513205043100.png) |
+| [**MS-Mapping**](https://github.com/JokerJohn/MS-Mapping) | Multi-Session LiDAR Mapping | arXiv 2024 | AC/CD/MME | ![MS-Mapping](./README/image-20240730152951528.png) |
+| [**FusionPortableV2**](https://journals.sagepub.com/doi/full/10.1177/02783649241303525) | SLAM Dataset | IJRR 2024 | COM/CD | ![FusionPortableV2](./README/10.1177_02783649241303525-fig15.jpg) |
 
 
 
 ## Contributors
 
+We thank all contributors to this project:
+
 <a href="https://github.com/JokerJohn/Cloud_Map_Evaluation/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=JokerJohn/Cloud_Map_Evaluation" />
 </a>
 
-![Star History Chart](https://api.star-history.com/svg?repos=JokerJohn/Cloud_Map_Evaluation&type=Date)
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=JokerJohn/Cloud_Map_Evaluation&type=Date)](https://star-history.com/#JokerJohn/Cloud_Map_Evaluation&Date)
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
