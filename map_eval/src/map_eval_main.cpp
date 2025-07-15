@@ -37,11 +37,11 @@ void displayProgramInformation(const Param& param) {
     
     // Configuration Parameters
     std::cout << "╔══════════════════════════════════════════════════════════════════════════════╗\n";
-    std::cout << "║                          EVALUATION CONFIGURATION                              ║\n";
+    std::cout << "║                          EVALUATION CONFIGURATION                            ║\n";
     std::cout << "╠══════════════════════════════════════════════════════════════════════════════╣\n";
     
     // Scene Information
-    std::cout << "║ Scene Information:                                                             ║\n";
+    std::cout << "║ Scene Information:                                                           ║\n";
     std::cout << "║ ├─ Scene Name: " << std::left << std::setw(61) << param.name_ << " ║\n";
     std::cout << "║ ├─ GT Map: " << std::left << std::setw(65) 
               << (param.map_gt_path_.length() > 65 ? "..." + param.map_gt_path_.substr(param.map_gt_path_.length() - 62) : param.map_gt_path_) 
@@ -53,7 +53,7 @@ void displayProgramInformation(const Param& param) {
     std::cout << "╠══════════════════════════════════════════════════════════════════════════════╣\n";
     
     // Registration Settings
-    std::cout << "║ Registration Settings:                                                         ║\n";
+    std::cout << "║ Registration Settings:                                                       ║\n";
     std::string reg_method = (param.evaluation_method_ == 0) ? "Point-to-Point ICP" : 
                             (param.evaluation_method_ == 1) ? "Point-to-Plane ICP" : "GICP";
     std::cout << "║ ├─ Method: " << std::left << std::setw(65) << reg_method << " ║\n";
@@ -65,7 +65,7 @@ void displayProgramInformation(const Param& param) {
     std::cout << "╠══════════════════════════════════════════════════════════════════════════════╣\n";
     
     // Evaluation Metrics
-    std::cout << "║ Evaluation Metrics:                                                            ║\n";
+    std::cout << "║ Evaluation Metrics:                                                          ║\n";
     std::cout << "║ ├─ Evaluate MME: " << std::left << std::setw(59) 
               << (param.evaluate_mme_ ? "Enabled" : "Disabled") << " ║\n";
     if (param.evaluate_mme_) {
@@ -89,7 +89,7 @@ void displayProgramInformation(const Param& param) {
     std::cout << "╠══════════════════════════════════════════════════════════════════════════════╣\n";
     
     // Output Settings
-    std::cout << "║ Output Settings:                                                               ║\n";
+    std::cout << "║ Output Settings:                                                             ║\n";
     std::cout << "║ ├─ Save Results: " << std::left << std::setw(59) 
               << (param.save_immediate_result_ ? "Enabled" : "Disabled") << " ║\n";
     std::cout << "║ ├─ Visualization: " << std::left << std::setw(58) 
@@ -100,7 +100,7 @@ void displayProgramInformation(const Param& param) {
     std::cout << "╠══════════════════════════════════════════════════════════════════════════════╣\n";
     
     // System Information
-    std::cout << "║ System Information:                                                            ║\n";
+    std::cout << "║ System Information:                                                          ║\n";
     std::cout << "║ ├─ CPU Threads: " << std::left << std::setw(60) << std::thread::hardware_concurrency() << " ║\n";
 //    std::cout << "║ ├─ OpenMP: Enabled                                                             ║\n";
 //    std::cout << "║ ├─ TBB: Enabled                                                                ║\n";
@@ -210,11 +210,11 @@ Param loadParametersFromYAML(const std::string& yaml_file_path) {
 
 int main(int argc, char **argv) {
     // Set default config file or use command line argument
-    std::string config_file = "../config/config_building_day.yaml";
-    if (argc > 1) {
-        config_file = argv[1];
-    }
-    
+    std::string config_file = "../config/config.yaml";
+    //    if (argc > 1) {
+    //        config_file = argv[1];
+    //    }
+
     std::cout << "Loading configuration from: " << config_file << "\n";
     
     // Load parameters from YAML configuration

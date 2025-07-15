@@ -38,7 +38,7 @@ save_immediate_result: true
 evaluate_mme: true
 
 # if use TBB acceleration for MME calculation
-use_tbb_mme: true
+use_tbb_mme: false
 
 # if we have ground truth map, we also want to evaluate the MME of the ground truth map
 evaluate_gt_mme: false
