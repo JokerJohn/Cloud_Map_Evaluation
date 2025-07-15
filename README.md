@@ -100,10 +100,11 @@ The following datasets are supported and used for evaluation:
 
 ### Dependencies
 
-- [Open3D (>= 0.11)](https://github.com/isl-org/Open3D)
-- Eigen3
+- [Open3D 0.15.1 (>= 0.11)](https://github.com/isl-org/Open3D)
+- Eigen 3.3.7
+- PCL 1.10.0
 - yaml-cpp
-- TBB (Threading Building Blocks)
+- TBB 2020.1
 - Ubuntu 20.04
 
 ### Test Data
