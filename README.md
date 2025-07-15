@@ -89,7 +89,7 @@ The following datasets are supported and used for evaluation:
 | [MS-Dataset](https://github.com/JokerJohn/MS-Dataset) | Multi-session mapping dataset |
 | [FusionPortable (FP) and FusionPortableV2](https://fusionportable.github.io/dataset/fusionportable_v2/) | Multi-sensor fusion dataset |
 | [Newer College (NC)](https://ori-drs.github.io/newer-college-dataset/) | Outdoor autonomous navigation dataset |
-| [GEODE Dataset (GE)](https://github.com/PengYu-Team/GEODE_dataset) | Ground truth evaluation dataset |
+| [GEODE Dataset (GE)](https://github.com/PengYu-Team/GEODE_dataset) | Degenerate SLAM dataset |
 
 | ![image-20250322192302315](./README/image-20250322192302315.png) |
 | ------------------------------------------------------------ |
@@ -243,9 +243,8 @@ Only **Mean Map Entropy (MME)** can be used for evaluation.
 
 **Important considerations:**
 - Maps must be on the same scale
-- Cannot compare LIO maps with LIO SLAM maps that have undergone loop closure optimization
-- Loop closure modifies local point cloud structure, leading to inaccurate MME evaluation
-- Can compare MME between different LIO maps
+  - Cannot compare LIO maps with LIO SLAM maps that have undergone loop closure optimization. Loop closure modifies local point cloud structure, leading to inaccurate MME evaluation.
+  - Can compare MME between different LIO maps
 
 *Credit: [@Silentbarber](https://github.com/Silentbarber), [ZOUYIyi](https://github.com/ZOUYIyi) in [issue #4](https://github.com/JokerJohn/Cloud_Map_Evaluation/issues/4) and [issue #7](https://github.com/JokerJohn/Cloud_Map_Evaluation/issues/7)*
 
