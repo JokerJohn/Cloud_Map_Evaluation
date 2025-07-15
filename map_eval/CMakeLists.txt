@@ -5,14 +5,15 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_BUILD_TYPE Release)
 
 #if you can not find your open3d install path, just mannually set it
-set(Open3D_DIR "/home/xchu/xicp_ws/devel/.private/open3d_catkin/lib/cmake/Open3D")
-message(STATUS "LTLoc: Set Open3D_DIR to ${Open3D_DIR}") # 打印信息，确认设置生效
+#set(Open3D_DIR "/home/xchu/xicp_ws/devel/.private/open3d_catkin/lib/cmake/Open3D")
+#message(STATUS "LTLoc: Set Open3D_DIR to ${Open3D_DIR}") # 打印信息，确认设置生效
 
 find_package(Open3D REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(OpenMP REQUIRED)
 find_package(PCL REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(TBB REQUIRED)
 
 message(STATUS "yaml-cpp library: ${YAML_CPP_LIBRARY}")
 message(STATUS "yaml-cpp include: ${YAML_CPP_INCLUDE_DIR}")
@@ -31,7 +32,7 @@ include_directories(
 )
 
 add_executable(map_eval src/map_eval.cpp src/map_eval_main.cpp src/voxel_calculator.cpp)
-target_link_libraries(map_eval ${Open3D_LIBRARIES} ${PCL_LIBRARIES}  yaml-cpp)
+target_link_libraries(map_eval ${Open3D_LIBRARIES} ${PCL_LIBRARIES} yaml-cpp TBB::tbb)
 
 
 

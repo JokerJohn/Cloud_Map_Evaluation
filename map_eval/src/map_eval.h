@@ -19,6 +19,11 @@
 #include <yaml-cpp/yaml.h>
 #include <iostream>
 #include <stdexcept>
+#include <tbb/parallel_reduce.h>
+#include <tbb/blocked_range.h>
+#include <tbb/concurrent_vector.h>
+#include <atomic>
+#include <functional>
 #include "tic_toc.h"
 #include "voxel_calculator.hpp"
 
@@ -74,6 +79,7 @@ struct Param {
     bool evaluate_noised_gt_ = false;  // Flag to add noise to ground truth for simulation
     bool use_visualization = false;
     bool enable_debug = false;
+    bool use_tbb_mme = true;  // Flag to enable TBB acceleration for MME calculation
 
     // Transformation and noise parameters
     Vector5d trunc_dist_;  // Truncation distance (for point cloud processing)
@@ -116,9 +122,6 @@ class MapEval {
 public:
     MapEval(Param &param)
             : param_(param), map_3d_(new PointCloud), gt_3d_(new PointCloud), processed_points(9) {
-
-        // Print configuration parameters for the evaluation
-        param_.printParam();
 
         // Initialize timing variables
         t1 = t2 = t3 = t4 = t5 = t6 = t7 = 0.0;
@@ -284,6 +287,9 @@ public:
 
     double ComputeMeanMapEntropyUsingNormal(const std::shared_ptr <open3d::geometry::PointCloud> &pointcloud,
                                             std::vector<double> &entropies, double radius);
+
+    double ComputeMeanMapEntropyUsingNormalTBB(const std::shared_ptr <open3d::geometry::PointCloud> &pointcloud,
+                                               std::vector<double> &entropies, double radius);
 
     void StartProcessing(int total);  // 开始处理的函数声明
 

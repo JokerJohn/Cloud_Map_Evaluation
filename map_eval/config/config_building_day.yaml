@@ -26,7 +26,7 @@ gt_map_path: /media/xchu/e81eaf80-d92c-413a-a503-1c9b35b19963/home/xchu/data/eva
 
 
 # scene name, not important, just for batch processing for a series of scenes
-scene_name: stairs
+scene_name: building_day
 
 # other settings
 # if we save the immediate result to a text file
@@ -35,7 +35,10 @@ save_immediate_result: true
 # if evaluate Mean Map Entropy (MME) if you do not have ground truth map
 # but remember, MME can be only used for map comparison with the same scale, e.g., maps are for odometry.
 # it costs a lot of time to calculate MME, so we set it as false by default
-evaluate_mme: false
+evaluate_mme: true
+
+# if use TBB acceleration for MME calculation
+use_tbb_mme: true
 
 # if we have ground truth map, we also want to evaluate the MME of the ground truth map
 evaluate_gt_mme: false
@@ -63,7 +66,7 @@ vmd_voxel_size: 2.0
 downsample_size: 0.01
 
 # if show the evaluation error map after registration
-use_visualization: true
+use_visualization: false
 
 # if print the debug info
 enable_debug: true

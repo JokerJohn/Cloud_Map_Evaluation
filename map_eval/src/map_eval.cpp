@@ -19,8 +19,10 @@ int MapEval::process() {
     // Normal mode: Load the evaluation point cloud
     bool success = io::ReadPointCloudFromPCD(param_.evaluation_map_pcd_path_ + param_.pcd_file_name_, *map_3d_,
                                              io_params);
-    std::cout << "INFO: Loading map point cloud from: " << param_.evaluation_map_pcd_path_ + param_.pcd_file_name_
-              << std::endl;
+    if (param_.enable_debug) {
+        std::cout << "INFO: Loading map point cloud from: " << param_.evaluation_map_pcd_path_ + param_.pcd_file_name_
+                  << std::endl;
+    }
     if (!success) {
         std::cerr << "ERROR: Failed to load point cloud from the specified path." << std::endl;
         return -1;
@@ -41,41 +43,61 @@ int MapEval::process() {
     file_result << std::fixed << std::setprecision(15)
                 << "Estimated-Ground Truth point count: "
                 << map_3d_->points_.size() << " / " << gt_3d_->points_.size() << std::endl;
-    std::cout << "INFO: Loaded point clouds: " << map_3d_->points_.size() << " points (Map), "
-              << gt_3d_->points_.size() << " points (Ground Truth)." << std::endl;
+    if (param_.enable_debug) {
+        std::cout << "INFO: Loaded point clouds: " << map_3d_->points_.size() << " points (Map), "
+                  << gt_3d_->points_.size() << " points (Ground Truth)." << std::endl;
+    }
 
     // Perform MME calculation if enabled
     if (param_.evaluate_mme_) {
-        std::cout << "INFO: Starting MME calculation..." << std::endl;
+        if (param_.enable_debug) {
+            std::cout << "INFO: Starting MME calculation..." << std::endl;
+        }
         computeMME(map_3d_, gt_3d_);
-        std::cout << "INFO: MME calculation completed. Saving results." << std::endl;
+        if (param_.enable_debug) {
+            std::cout << "INFO: MME calculation completed. Saving results." << std::endl;
+        }
         if (param_.save_immediate_result_) saveMmeResults();
         // Log the MME calculation time
         t2 = tic_toc.toc();
-        std::cout << "INFO: MME calculation completed in: " << (t2 - t1) / 1000.0 << " seconds." << std::endl;
+        if (param_.enable_debug) {
+            std::cout << "INFO: MME calculation completed in: " << (t2 - t1) / 1000.0 << " seconds." << std::endl;
+        }
     }
 
     // Start registration process
-    std::cout << "INFO: Starting registration..." << std::endl;
+    if (param_.enable_debug) {
+        std::cout << "INFO: Starting registration..." << std::endl;
+    }
     if (param_.evaluate_using_initial_) {
-        std::cout << "INFO: Using initial matrix without registration." << std::endl;
+        if (param_.enable_debug) {
+            std::cout << "INFO: Using initial matrix without registration." << std::endl;
+        }
         calculateMetricsWithInitialMatrix();
     } else {
-        std::cout << "INFO: Using ICP for registration." << std::endl;
+        if (param_.enable_debug) {
+            std::cout << "INFO: Using ICP for registration." << std::endl;
+        }
         performRegistration();
     }
 
     // Calculate additional metrics
     calculateVMD();
-    std::cout << "INFO: VMD calculation completed." << std::endl;
+    if (param_.enable_debug) {
+        std::cout << "INFO: VMD calculation completed." << std::endl;
+    }
 
     // Save registration results
     if (param_.save_immediate_result_) {
-        std::cout << "INFO: Saving registration results..." << std::endl;
+        if (param_.enable_debug) {
+            std::cout << "INFO: Saving registration results..." << std::endl;
+        }
         saveRegistrationResults();
     }
 
-    std::cout << "INFO: Results saved successfully." << std::endl;
+    if (param_.enable_debug) {
+        std::cout << "INFO: Results saved successfully." << std::endl;
+    }
     return 0;
 }
 
@@ -83,7 +105,11 @@ void MapEval::computeMME() {
     if (param_.evaluate_mme_) {
         TicToc tic_toc;
         // Compute Mean Map Entropy using normal-based method
-        mme_est = ComputeMeanMapEntropyUsingNormal(map_3d_, est_entropies, param_.nn_radius_);
+        if (param_.use_tbb_mme) {
+            mme_est = ComputeMeanMapEntropyUsingNormalTBB(map_3d_, est_entropies, param_.nn_radius_);
+        } else {
+            mme_est = ComputeMeanMapEntropyUsingNormal(map_3d_, est_entropies, param_.nn_radius_);
+        }
 
         // Preserving commented-out lines for future use
         // Merge entropy vectors from both point clouds (for coloring)
@@ -97,7 +123,9 @@ void MapEval::computeMME() {
         // std::cout << "MAX MIN ENTROPY: " << max_abs_entropy << " " << min_abs_entropy << std::endl;
 
         if (param_.evaluate_gt_mme_) {
-            std::cout << "INFO: Calculating GT MME..." << std::endl;
+            if (param_.enable_debug) {
+                std::cout << "INFO: Calculating GT MME..." << std::endl;
+            }
             mme_gt = ComputeMeanMapEntropy(gt_3d_, gt_entropies, param_.nn_radius_);
             std::cout << "MME EST-GT: " << mme_est << " " << mme_gt << std::endl;
         } else {
@@ -112,7 +140,9 @@ void MapEval::computeMME() {
         }
 
         // Log computation time for MME
-        std::cout << "INFO: MME Calculation Time: " << (tic_toc.toc() - t2) / 1000.0 << " [s]" << std::endl;
+        if (param_.enable_debug) {
+            std::cout << "INFO: MME Calculation Time: " << (tic_toc.toc() - t2) / 1000.0 << " [s]" << std::endl;
+        }
     }
 }
 
@@ -120,7 +150,11 @@ void MapEval::computeMME(shared_ptr <PointCloud> &cloud_, shared_ptr <PointCloud
     if (param_.evaluate_mme_) {
         TicToc tic_toc;
         // Compute Mean Map Entropy for the given cloud
-        mme_est = ComputeMeanMapEntropyUsingNormal(cloud_, est_entropies, param_.nn_radius_);
+        if (param_.use_tbb_mme) {
+            mme_est = ComputeMeanMapEntropyUsingNormalTBB(cloud_, est_entropies, param_.nn_radius_);
+        } else {
+            mme_est = ComputeMeanMapEntropyUsingNormal(cloud_, est_entropies, param_.nn_radius_);
+        }
 
         // Preserving commented-out lines for future use
         // Merge entropy vectors for proper scaling (for coloring)
@@ -148,7 +182,9 @@ void MapEval::computeMME(shared_ptr <PointCloud> &cloud_, shared_ptr <PointCloud
         }
 
         // Log MME computation time
-        std::cout << "INFO: MME Calculation Time: " << (tic_toc.toc() - t2) / 1000.0 << " [s]" << std::endl;
+        if (param_.enable_debug) {
+            std::cout << "INFO: MME Calculation Time: " << (tic_toc.toc() - t2) / 1000.0 << " [s]" << std::endl;
+        }
     }
 }
 
@@ -187,7 +223,9 @@ void MapEval::performRegistration() {
     file_result << std::fixed << setprecision(5) << "Aligned cloud: " << trans.matrix() << std::endl;
     file_result << std::fixed << setprecision(5) << "Aligned results: " << registration_result.fitness_ << " "
                 << registration_result.correspondence_set_.size() << std::endl;
-    std::cout << "INFO: Aligned results saved to " << results_file_path << std::endl;
+    if (param_.enable_debug) {
+        std::cout << "INFO: Aligned results saved to " << results_file_path << std::endl;
+    }
 
     // Calculate metrics and evaluate the results
     calculateMetrics(registration_result);
@@ -268,7 +306,9 @@ void MapEval::calculateVMD() {
 
     // Close output file after writing
     output_file.close();
-    std::cout << "INFO: Voxel errors results saved to " << results_subfolder + "voxel_errors.txt" << std::endl;
+    if (param_.enable_debug) {
+        std::cout << "INFO: Voxel errors results saved to " << results_subfolder + "voxel_errors.txt" << std::endl;
+    }
 
     // Calculate the mean Wasserstein distance
     std::vector<double> ws_distances;
@@ -300,10 +340,14 @@ void MapEval::calculateVMD() {
     }
     cdf_file.close();
     t_cdf = ticToc.toc();  // Timing CDF calculation
-    std::cout << "INFO: CDF results saved to " << results_subfolder + "voxel_wasserstein_cdf.txt" << std::endl;
+    if (param_.enable_debug) {
+        std::cout << "INFO: CDF results saved to " << results_subfolder + "voxel_wasserstein_cdf.txt" << std::endl;
+    }
 
     // Calculate the Spatial Consistency Score (SCS)
-    std::cout << "INFO: Calculating Spatial Consistency Score (SCS)..." << std::endl;
+    if (param_.enable_debug) {
+        std::cout << "INFO: Calculating Spatial Consistency Score (SCS)..." << std::endl;
+    }
     double total_scs = 0.0;
     int scs_count = 0;
     int radius = 5;  // Radius for neighborhood
@@ -352,16 +396,26 @@ void MapEval::saveMmeResults() {
                     << min_abs_entropy << " " << max_abs_entropy << std::endl;
         file_mt.unlock();  // Unlock file access
 
-        std::cout << "INFO: MME results saved to " << results_file_path << std::endl;
+        if (param_.enable_debug) {
+            std::cout << "INFO: MME results saved to " << results_file_path << std::endl;
+        }
 
         // Save point clouds
         open3d::io::WritePointCloud(results_subfolder + "map_entropy.pcd", *map_3d_entropy);
-        std::cout << "INFO: Saved rendered entropy map to " << results_subfolder + "map_entropy.pcd" << std::endl;
+        if (param_.enable_debug) {
+            if (param_.enable_debug) {
+                std::cout << "INFO: Saved rendered entropy map to " << results_subfolder + "map_entropy.pcd" << std::endl;
+            }
+        }
 
         if (param_.evaluate_gt_mme_) {
             open3d::io::WritePointCloud(results_subfolder + "gt_entropy.pcd", *gt_3d_entropy);
-            std::cout << "INFO: Saved rendered entropy ground truth map to " << results_subfolder + "gt_entropy.pcd"
-                      << std::endl;
+            if (param_.enable_debug) {
+                if (param_.enable_debug) {
+                    std::cout << "INFO: Saved rendered entropy ground truth map to " << results_subfolder + "gt_entropy.pcd"
+                              << std::endl;
+                }
+            }
         }
     }
 }
@@ -423,7 +477,9 @@ void MapEval::saveRegistrationResults() {
 
     file_result.close();
     file_mt.unlock();
-    std::cout << "INFO: Results saved to " << results_subfolder + "map_results.txt" << std::endl;
+    if (param_.enable_debug) {
+        std::cout << "INFO: Results saved to " << results_subfolder + "map_results.txt" << std::endl;
+    }
 
     // Save rendered distance error maps
     map_3d_render_inlier = renderDistanceOnPointCloud(corresponding_cloud_gt, corresponding_cloud_est,
@@ -432,16 +488,22 @@ void MapEval::saveRegistrationResults() {
 
     // Save the raw and inlier distance maps
     open3d::io::WritePointCloud(results_subfolder + "raw_rendered_dis_map.pcd", *map_3d_render_raw);
-    std::cout << "INFO: Saved raw distance error map to " << results_subfolder + "raw_rendered_dis_map.pcd"
-              << std::endl;
+    if (param_.enable_debug) {
+        std::cout << "INFO: Saved raw distance error map to " << results_subfolder + "raw_rendered_dis_map.pcd"
+                  << std::endl;
+    }
     open3d::io::WritePointCloud(results_subfolder + "inlier_rendered_dis_map.pcd", *map_3d_render_inlier);
-    std::cout << "INFO: Saved inlier distance error map to " << results_subfolder + "inlier_rendered_dis_map.pcd"
-              << std::endl;
+    if (param_.enable_debug) {
+        std::cout << "INFO: Saved inlier distance error map to " << results_subfolder + "inlier_rendered_dis_map.pcd"
+                  << std::endl;
+    }
 
     // If noisy ground truth is evaluated, save the noisy GT map
     if (param_.evaluate_noised_gt_) {
         open3d::io::WritePointCloud(results_subfolder + "noise_gt_map.pcd", *map_3d_);
-        std::cout << "INFO: Saved noisy ground truth map to " << results_subfolder + "noise_gt_map.pcd" << std::endl;
+        if (param_.enable_debug) {
+            std::cout << "INFO: Saved noisy ground truth map to " << results_subfolder + "noise_gt_map.pcd" << std::endl;
+        }
     }
 
     // Save meshes (if mesh evaluation is enabled)
@@ -451,17 +513,21 @@ void MapEval::saveRegistrationResults() {
         corresponding_cloud_est->EstimateNormals(geometry::KDTreeSearchParamHybrid(1.0, 30));
 
         // Optional: render mesh by distance error
-        std::cout << "INFO: Rendering correspondence mesh..." << std::endl;
+        if (param_.enable_debug) {
+            std::cout << "INFO: Rendering correspondence mesh..." << std::endl;
+        }
 
         // Save GT and estimated meshes
         open3d::io::WriteTriangleMesh(results_subfolder + "gt_mesh.ply", *gt_mesh);
         open3d::io::WriteTriangleMesh(results_subfolder + "est_mesh.ply", *est_mesh);
         open3d::io::WriteTriangleMesh(results_subfolder + "correspondence_mesh.ply", *correspondence_mesh);
 
-        std::cout << "INFO: Saved meshes to the following paths:" << std::endl;
-        std::cout << "GT Mesh: " << results_subfolder + "gt_mesh.ply" << std::endl;
-        std::cout << "Estimated Mesh: " << results_subfolder + "est_mesh.ply" << std::endl;
-        std::cout << "Correspondence Mesh: " << results_subfolder + "correspondence_mesh.ply" << std::endl;
+        if (param_.enable_debug) {
+            std::cout << "INFO: Saved meshes to the following paths:" << std::endl;
+            std::cout << "GT Mesh: " << results_subfolder + "gt_mesh.ply" << std::endl;
+            std::cout << "Estimated Mesh: " << results_subfolder + "est_mesh.ply" << std::endl;
+            std::cout << "Correspondence Mesh: " << results_subfolder + "correspondence_mesh.ply" << std::endl;
+        }
     }
 
     if (param_.use_visualization) {
@@ -1207,7 +1273,9 @@ void MapEval::saveResults() {
 
     // Create subfolder if it doesn't exist
     std::string results_subfolder = param_.evaluation_map_pcd_path_ + subfolder;
-    std::cout << "INFO: Saving results in " << results_subfolder << std::endl;
+    if (param_.enable_debug) {
+        std::cout << "INFO: Saving results in " << results_subfolder << std::endl;
+    }
     if (!fs::exists(results_subfolder)) {
         fs::create_directory(results_subfolder);
     }
@@ -1257,11 +1325,15 @@ void MapEval::saveResults() {
                                                       param_.trunc_dist_[0]);
     map_3d_render_raw = renderDistanceOnPointCloud(gt_3d_, map_3d_, param_.trunc_dist_[0]);
     open3d::io::WritePointCloud(results_subfolder + "raw_rendered_dis_map.pcd", *map_3d_render_raw);
-    std::cout << "INFO: Saved rendered inlier distance error map to " << results_subfolder + "raw_rendered_dis_map.pcd"
-              << std::endl;
+    if (param_.enable_debug) {
+        std::cout << "INFO: Saved rendered inlier distance error map to " << results_subfolder + "raw_rendered_dis_map.pcd"
+                  << std::endl;
+    }
     open3d::io::WritePointCloud(results_subfolder + "inlier_rendered_dis_map.pcd", *map_3d_render_inlier);
-    std::cout << "INFO: Saved rendered raw distance error map to " << results_subfolder + "inlier_rendered_dis_map.pcd"
-              << std::endl;
+    if (param_.enable_debug) {
+        std::cout << "INFO: Saved rendered raw distance error map to " << results_subfolder + "inlier_rendered_dis_map.pcd"
+                  << std::endl;
+    }
 
     // Save meshes and entropy maps if required
     if (param_.evaluate_mme_) {
@@ -1279,7 +1351,9 @@ void MapEval::saveResults() {
     if (eva_mesh) {
         shared_ptr <Mesh> correspondence_mesh(new Mesh());
         corresponding_cloud_est->EstimateNormals(geometry::KDTreeSearchParamHybrid(1.0, 30));
-        std::cout << "INFO: Rendering correspondence mesh..." << std::endl;
+        if (param_.enable_debug) {
+            std::cout << "INFO: Rendering correspondence mesh..." << std::endl;
+        }
         open3d::io::WriteTriangleMesh(results_subfolder + "gt_mesh.ply", *gt_mesh);
         open3d::io::WriteTriangleMesh(results_subfolder + "est_mesh.ply", *est_mesh);
         open3d::io::WriteTriangleMesh(results_subfolder + "correspondence_mesh.ply", *correspondence_mesh);
@@ -1528,6 +1602,137 @@ double MapEval::ComputeMeanMapEntropyUsingNormal(
     if (valid_points * 100.0 / total_points < 0.6) {
         std::cerr << "valid points is too small, please check the input point cloud" << std::endl;
     }
+    return mean_entropy;
+}
+
+double MapEval::ComputeMeanMapEntropyUsingNormalTBB(
+        const std::shared_ptr <open3d::geometry::PointCloud> &pointcloud,
+        std::vector<double> &entropies,
+        double radius) {
+    
+    const int total_points = static_cast<int>(pointcloud->points_.size());
+    entropies = std::vector<double>(pointcloud->points_.size(), 0.0);
+    valid_entropy_points.resize(pointcloud->points_.size(), false);
+    
+    // Build KD-Tree once for all threads
+    open3d::geometry::KDTreeFlann kdtree;
+    kdtree.SetGeometry(*pointcloud);
+    
+    StartProcessing(total_points);
+    auto start_time = std::chrono::steady_clock::now();
+    
+    // TBB parallel reduction for entropy computation - optimized version
+    struct EntropyComputation {
+        const std::shared_ptr<open3d::geometry::PointCloud>& pointcloud;
+        const open3d::geometry::KDTreeFlann& kdtree;
+        std::vector<double>& entropies;
+        std::vector<bool>& valid_entropy_points;
+        const double radius;
+        const int total_points;
+        const bool enable_debug;
+        double sum_entropy;
+        int local_valid_points;
+        int local_processed_points;  // Local counter to reduce atomic operations
+        
+        EntropyComputation(const std::shared_ptr<open3d::geometry::PointCloud>& pc,
+                          const open3d::geometry::KDTreeFlann& tree,
+                          std::vector<double>& ent,
+                          std::vector<bool>& valid_ent,
+                          double rad,
+                          int total_pts,
+                          bool debug)
+            : pointcloud(pc), kdtree(tree), entropies(ent), valid_entropy_points(valid_ent),
+              radius(rad), total_points(total_pts), enable_debug(debug),
+              sum_entropy(0.0), local_valid_points(0), local_processed_points(0) {}
+        
+        EntropyComputation(const EntropyComputation& other, tbb::split)
+            : pointcloud(other.pointcloud), kdtree(other.kdtree), entropies(other.entropies),
+              valid_entropy_points(other.valid_entropy_points), radius(other.radius),
+              total_points(other.total_points), enable_debug(other.enable_debug), 
+              sum_entropy(0.0), local_valid_points(0), local_processed_points(0) {}
+        
+        // Inline entropy computation for better performance
+        inline double computeEntropy(const Eigen::Matrix3d& covariance) const {
+            return 0.5 * std::log(2 * M_PI * M_E * covariance.determinant());
+        }
+        
+        void operator()(const tbb::blocked_range<int>& range) {
+            // Pre-allocate vectors to avoid repeated allocations
+            std::vector<int> indices;
+            std::vector<double> distances;
+            indices.reserve(100);  // Reserve space to reduce reallocations
+            distances.reserve(100);
+            
+            for (int i = range.begin(); i != range.end(); ++i) {
+                indices.clear();
+                distances.clear();
+                
+                if (kdtree.SearchRadius(pointcloud->points_[i], radius, indices, distances) > 0) {
+                    // Remove the query point itself
+                    indices.erase(indices.begin());
+                    distances.erase(distances.begin());
+                    
+                    if (indices.size() >= 10) {
+                        // Build point matrix - optimized
+                        const size_t num_neighbors = indices.size();
+                        Eigen::MatrixXd points(3, num_neighbors);
+                        for (size_t j = 0; j < num_neighbors; ++j) {
+                            points.col(j) = pointcloud->points_[indices[j]].cast<double>();
+                        }
+                        
+                        // Compute mean and center
+                        Eigen::Vector3d mean = points.rowwise().mean();
+                        Eigen::MatrixXd centered = points.colwise() - mean;
+                        
+                        // Compute covariance matrix
+                        Eigen::Matrix3d covariance =
+                                (centered * centered.transpose()) / static_cast<double>(num_neighbors - 1);
+                        
+                        double entropy = computeEntropy(covariance);
+                        if (!std::isnan(entropy) && !std::isinf(entropy)) {
+                            sum_entropy += entropy;
+                            entropies[i] = entropy;
+                            valid_entropy_points[i] = true;
+                            ++local_valid_points;
+                        }
+                    }
+                }
+                ++local_processed_points;
+            }
+        }
+        
+        void join(const EntropyComputation& other) {
+            sum_entropy += other.sum_entropy;
+            local_valid_points += other.local_valid_points;
+            local_processed_points += other.local_processed_points;
+        }
+    };
+    
+    // Create the entropy computation object
+    EntropyComputation entropy_comp(pointcloud, kdtree, entropies, valid_entropy_points,
+                                   radius, total_points, param_.enable_debug);
+    
+    // Execute parallel reduction with optimal grain size
+    const int grain_size = std::max(1, total_points / (8 * static_cast<int>(std::thread::hardware_concurrency())));
+    tbb::parallel_reduce(tbb::blocked_range<int>(0, total_points, grain_size), entropy_comp);
+    
+    // Compute final mean entropy
+    double mean_entropy = 0.0;
+    int final_valid_points = entropy_comp.local_valid_points;
+    if (final_valid_points > 0) {
+        mean_entropy = entropy_comp.sum_entropy / final_valid_points;
+    }
+    
+    if (param_.enable_debug) {
+        std::cout << "TBB MME Valid_points " << final_valid_points * 100.0 / total_points << "% " 
+                  << final_valid_points << " " << total_points << std::endl;
+    }
+    
+    // Check if there are enough valid points for MME calculation
+    if (final_valid_points * 100.0 / total_points < 0.6) {
+        std::cerr << "valid points is too small, please check the input point cloud" << std::endl;
+    }
+    
     return mean_entropy;
 }
 
