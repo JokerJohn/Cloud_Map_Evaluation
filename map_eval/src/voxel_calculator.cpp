@@ -117,7 +117,7 @@ double VoxelCalculator::computeWassersteinDistanceGaussian(const VoxelInfo &voxe
     Eigen::Vector3d mu2 = voxel2.mu;
     Eigen::Matrix3d sigma1 = Eigen::Matrix3d::Identity();
     if (voxel1.num_points > 1) {
-        sigma1 = voxel1.sigma / (voxel1.num_points - 1);
+        sigma1 = voxel1.sigma;
         sigma1 = (sigma1 + sigma1.transpose()) / 2;  // Ensure symmetry
         Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eigensolver(sigma1);
         sigma1 = eigensolver.eigenvectors() * eigensolver.eigenvalues().cwiseMax(1e-6).asDiagonal() *
@@ -125,7 +125,7 @@ double VoxelCalculator::computeWassersteinDistanceGaussian(const VoxelInfo &voxe
     }
     Eigen::Matrix3d sigma2 = Eigen::Matrix3d::Identity();
     if (voxel2.num_points > 1) {
-        sigma2 = voxel2.sigma / (voxel2.num_points - 1);
+        sigma2 = voxel2.sigma;
         sigma2 = (sigma2 + sigma2.transpose()) / 2;  // Ensure symmetry
         Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eigensolver(sigma2);
         sigma2 = eigensolver.eigenvectors() * eigensolver.eigenvalues().cwiseMax(1e-6).asDiagonal() *
