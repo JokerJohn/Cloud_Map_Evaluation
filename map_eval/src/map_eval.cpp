@@ -1238,7 +1238,7 @@ void MapEval::calculateMetricsWithInitialMatrix() {
     // Calculate the metrics (est_gt_results and gt_est_results)
     getDiffRegResultWithCorrespondence(est_gt_results, est_gt_correspondence, *map_3d_, *gt_3d_,
                                        *corresponding_cloud_est, *corresponding_cloud_gt);
-    getDiffRegResultWithCorrespondence(gt_est_results, gt_est_correspondence, *gt_3d_, *map_3d_,
+    getDiffRegResultWithCorrespondence(gt_est_results, gt_est_correspondence, *map_3d_, *gt_3d_,
                                        *corresponding_cloud_est, *corresponding_cloud_gt);
 
     // Calculate Chamfer Distance, F1 Score, and IoU (for initial matrix)
